@@ -1,11 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Reflection.Metadata;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 
 namespace LocalDevicesSearcher
@@ -57,22 +51,8 @@ namespace LocalDevicesSearcher
             
         }
 
-        //private string CreateDirectoryIfNotExists()
-        //{
-        //    string path = Environment.CurrentDirectory;
-        //    string subpath = @"\Logs";
-        //    string newpath = path + subpath;
-        //    DirectoryInfo dirInfo = new DirectoryInfo(newpath);
-        //    if (!dirInfo.Exists )
-        //    {
-        //        dirInfo.Create();
-        //    }
-        //    return newpath;
-        //}
-
         public void CreateLogFile(string filename)
         {
-            //string path = CreateDirectoryIfNotExists()+@"\";
             logFileName =$"{filename}.log";
             using (StreamWriter writer = new StreamWriter(logFileName, false)) {};
                

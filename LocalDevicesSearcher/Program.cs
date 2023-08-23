@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -11,8 +9,11 @@ namespace LocalDevicesSearcher
 {
     public class Program
     {
+
         const int timeout = 100;
-        static string fileName = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        const int min = 0;
+        const int max = 256;
+        static readonly string fileName = DateTime.Now.ToString("yyyyMMdd_HHmmss");
         public static void Main()
         {
             var logger = new Logger(new SimpleLogService());
@@ -32,7 +33,7 @@ namespace LocalDevicesSearcher
                 string msg = $"Pinging subnet {subnet}0 - {subnet}255 :\n";
                 logger.Log(msg);
 
-                for (int i = 0; i < 255; i++) 
+                for (int i = min; i < max; i++) 
                 {
                     IPAddress.TryParse(subnet + i, out IPAddress pingedAddress);
                     PingReply reply = pinger.Send(pingedAddress, timeout, buffer);
@@ -59,7 +60,7 @@ namespace LocalDevicesSearcher
         }
 
 
-        public static bool Validator(string address)
+        private static bool Validator(string address)
         {
             return (address != "127.0.0.1");
         }
