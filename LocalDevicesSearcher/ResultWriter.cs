@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
+﻿using System.IO;
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace LocalDevicesSearcher
 {
@@ -42,22 +36,8 @@ namespace LocalDevicesSearcher
             resultWriterService.WriteToResultFile(resultFileName, device);
         }
 
-        //private string CreateDirectoryIfNotExists()
-        //{
-        //    string path = Environment.CurrentDirectory;
-        //    string subpath = @"\Result";
-        //    string newpath = path + subpath;
-        //    DirectoryInfo dirInfo = new DirectoryInfo(newpath);
-        //    if (!dirInfo.Exists)
-        //    {
-        //        dirInfo.Create();
-        //    }
-        //    return newpath;
-        //}
-
         public void CreateResultFile(string fileName)
         {
-            //string path = CreateDirectoryIfNotExists() + @"\";
             resultFileName = $"{fileName}.json";
             using (StreamWriter writer = new StreamWriter(resultFileName, false)) { };
 
