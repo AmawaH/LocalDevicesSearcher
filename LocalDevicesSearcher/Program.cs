@@ -1,89 +1,93 @@
-﻿using System;
+﻿using LocalDevicesSearcher.Validations;
+using LocalDevicesSearcher.Processing;
+using System;
 using System.Linq;
 using System.Net;
-using System.Net.NetworkInformation;
 using System.Net.Sockets;
-using System.Text;
+using LocalDevicesSearcher.infrastructure;
+using System.Threading.Tasks;
 
 namespace LocalDevicesSearcher
 {
     public class Program
     {
-
-        const int timeout = 100;
-        const int min = 0;
-        const int max = 256;
-        static readonly string fileName = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        private readonly Logger logger;
+        private readonly ResultWriter resultWriter;
+        private readonly Validators validators;
+        const int minSubnetRange = 0;
+        const int maxSubnetRange = 256;
+        static readonly string fileName = DateTime.Now.ToString("yyyyMMdd_HHmmss"); // "TestDir/testfilename";
+        private Program(Logger _logger, ResultWriter _resultWriter, Validators _validators)
+        {
+            logger = _logger;
+            resultWriter = _resultWriter;
+            validators = _validators;
+        }
+        public class Builder
+        {
+            private readonly Logger logger;
+            private readonly ResultWriter resultWriter;
+            private readonly Validators validators;
+            public Builder()
+            {
+                logger = new Logger();
+                resultWriter = new ResultWriter();
+                validators = new Validators();
+            }
+            public Program Build()
+            {
+                return new Program(logger, resultWriter, validators);
+            }
+        }
         public static void Main()
         {
-            var logger = new Logger(new SimpleLogService());
-            var resultWriter = new ResultWriter(new ResultWriterService());
+            var program = new Builder()
+                .Build();
+            program.Run();
+        }
+
+
+        public void Run()
+        {
             logger.CreateLogFile(fileName);
             resultWriter.CreateResultFile(fileName);
+            IPAddress selfLocalIp4 = GetSelfLocalIpAddress();
+            string selfLocalIp4String = selfLocalIp4.ToString();
 
+            string msg = $"Local device Ip detected: {selfLocalIp4String}";
+            logger.Log(msg);
 
-            string selfLocalIpAddress = GetSelfLocalIpAddress();
-
-            if (Validator(selfLocalIpAddress))
+            bool isConnectedToNetwork = validators.IpValidation(selfLocalIp4String);
+            if (isConnectedToNetwork)
             {
-                string subnet = selfLocalIpAddress.Substring(0, selfLocalIpAddress.LastIndexOf('.') + 1);
-                byte[] buffer = Encoding.ASCII.GetBytes("PingingMessage");
-                var pinger = new Ping();
+                string subnet = selfLocalIp4String.Substring(0, selfLocalIp4String.LastIndexOf('.') + 1);
 
-                string msg = $"Pinging subnet {subnet}0 - {subnet}255 :\n";
+                msg = $"Processing subnet {subnet}{minSubnetRange} - {subnet}{maxSubnetRange} :\n";
                 logger.Log(msg);
 
-                for (int i = min; i < max; i++) 
-                {
-                    IPAddress.TryParse(subnet + i, out IPAddress pingedAddress);
-                    PingReply reply = pinger.Send(pingedAddress, timeout, buffer);
-                    if (reply.Status == IPStatus.Success)
-                    {
-                        msg = $"Address: {reply.Address} Found something!";
-                        logger.Log(msg);
-
-                        Device foundDevice = new Device(pingedAddress.ToString());
-                        resultWriter.WriteResult(foundDevice);
-                    }
-                    else
-                    {
-                        msg = $"Address: {reply.Address} Nothing here...";
-                        logger.Log(msg);
-                    }
-                }
-
+                Parallel.ForEach(
+                    Enumerable.Range(minSubnetRange, maxSubnetRange - minSubnetRange),
+                        new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount }, // Кількість паралельних потоків
+                        i =>
+                        {
+                            string addressInProcess = subnet + i;
+                            var processor = new Processor(logger, resultWriter);
+                            processor.Pinging(addressInProcess);
+                        });
             }
             else
             {
-               logger.Log("Your device is not connected to any network");
+                logger.Log("Your device is not connected to any network");
             }
         }
-
-
-        private static bool Validator(string address)
-        {
-            return (address != "127.0.0.1");
-        }
-    
-
-        private static string GetSelfLocalIpAddress()
+        private static IPAddress GetSelfLocalIpAddress()
         {
             string hostName = Dns.GetHostName();
             IPHostEntry ipHostEntry = Dns.GetHostEntry(hostName);
-
-            IPAddress ipAddress = ipHostEntry.AddressList
-                .FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork);
-            Console.WriteLine($"Local IP Address: {ipAddress}");
-            IPAddress ipAddressV6 = ipHostEntry.AddressList
-                .FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetworkV6);
-
-            Console.WriteLine($"Local IPv6 Address: {ipAddressV6}");
-
-            return ipAddress.ToString();
+            IPAddress ip4 = ipHostEntry.AddressList
+                .FirstOrDefault(ip => ip.AddressFamily.ToString() == ProtocolFamily.InterNetwork.ToString());
+            return ip4;
         }
-
-
     }
-
 }
 
