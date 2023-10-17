@@ -3,19 +3,20 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Net;
 using System.Runtime.InteropServices;
+using System.Collections.Generic;
 
 namespace LocalDevicesSearcher.Models
 {
     public class DeviceDataCalculator 
     {
         private readonly Device device;
-        public DeviceDataCalculator(IPAddress address)
+        public DeviceDataCalculator(IPAddress address, List<int> openedPorts)
         {
             IPAddress ip4 = address;
             IPAddress ip6 = GetIp6(address);
             string hostName = GetHostName(address);
             string macAddress = GetMacAddress(address);
-            device = new Device(ip4, ip6, hostName, macAddress);
+            device = new Device(ip4, ip6, hostName, macAddress, openedPorts);
         }
         public Device GetDevice()
         {

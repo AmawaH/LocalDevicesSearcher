@@ -4,8 +4,11 @@ using System;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using LocalDevicesSearcher.infrastructure;
 using System.Threading.Tasks;
+using LocalDevicesSearcher.Models;
+using System.Collections.Generic;
+using LocalDevicesSearcher.infrastructure.Logger;
+using LocalDevicesSearcher.infrastructure.ResultWriter;
 
 namespace LocalDevicesSearcher
 {
@@ -15,7 +18,7 @@ namespace LocalDevicesSearcher
         private readonly ResultWriter resultWriter;
         private readonly Validators validators;
         const int minSubnetRange = 0;
-        const int maxSubnetRange = 256;
+        const int maxSubnetRange = 256; 
         static readonly string fileName = DateTime.Now.ToString("yyyyMMdd_HHmmss"); // "TestDir/testfilename";
         private Program(Logger _logger, ResultWriter _resultWriter, Validators _validators)
         {
@@ -72,7 +75,16 @@ namespace LocalDevicesSearcher
                         {
                             string addressInProcess = subnet + i;
                             var processor = new Processor(logger, resultWriter);
-                            processor.Pinging(addressInProcess);
+                            IPAddress detectedIp = processor.Pinging(addressInProcess);
+                            if (detectedIp is not null)
+                            { 
+                                List<int> openedPorts = processor.PortsDetect(detectedIp);
+                                IPAddress address = detectedIp.MapToIPv4();
+                                var deviceCalculator = new DeviceDataCalculator(address, openedPorts);
+                                Device device = deviceCalculator.GetDevice();
+                                resultWriter.WriteResult(device);
+                            }
+
                         });
             }
             else
