@@ -1,58 +1,95 @@
-﻿using System.Net;
-using System.Net.NetworkInformation;
+﻿using LocalDevicesSearcher.Validations;
+using LocalDevicesSearcher.Processing;
+using System;
+using System.Linq;
+using System.Net;
 using System.Net.Sockets;
-using System.Text;
+using System.Threading.Tasks;
+using LocalDevicesSearcher.Models;
+using System.Collections.Generic;
+using LocalDevicesSearcher.Infrastructure.Logger;
+using LocalDevicesSearcher.Infrastructure.ResultWriter;
+using LocalDevicesSearcher.Infrastructure;
 
-class Program
+namespace LocalDevicesSearcher
 {
-    public static void Main()
+    public class Program
     {
-        List<string> foundAddressesList = new List<string>();
-        string selfLocalIpAddress = GetSelfLocalIpAddress();
-        Console.WriteLine($"Local IP Address: {selfLocalIpAddress}");
-        if (selfLocalIpAddress != "127.0.0.1")
+        private readonly ILogger logger;
+        private readonly IResultWriter resultWriter;
+        private readonly IValidators validators;
+        private readonly ISelfIpAddressGetter selfLocalIpAddressGetter;
+        private readonly IDeviceSearcher deviceSearcher;
+
+        const int minSubnetRange = 1;
+        const int maxSubnetRange = 256; 
+        static readonly string fileName = DateTime.Now.ToString("yyyyMMdd_HHmmss"); // "TestDir/testfilename";
+        private Program(ILogger _logger,
+            IResultWriter _resultWriter,
+            IValidators _validators,
+            ISelfIpAddressGetter _selfIpAddressGetter,
+            IDeviceSearcher _deviceSearcher)
         {
-            string subnet = selfLocalIpAddress.Substring(0, selfLocalIpAddress.LastIndexOf('.') + 1);
-            byte[] buffer = Encoding.ASCII.GetBytes("PingingMessage");
-            int timeout = 100;
-            string pingedAddress;
-            Ping pinger = new Ping();
-            Console.WriteLine($"Pinging subnet {subnet}0 - {subnet}255 :");
-            for (int i = 0; i < 255; i++)
+            logger = _logger;
+            resultWriter = _resultWriter;
+            validators = _validators;
+            selfLocalIpAddressGetter = _selfIpAddressGetter;
+            deviceSearcher = _deviceSearcher;
+        }
+        public class Builder
+        {
+            private readonly ILogger logger;
+            private readonly IResultWriter resultWriter;
+            private readonly IValidators validators;
+            private readonly ISelfIpAddressGetter selfIpAddressGetter;
+            private readonly IDeviceSearcher deviceSearcher;
+
+            public Builder()
             {
-                pingedAddress = subnet + i;
-                var reply = pinger.Send(pingedAddress, timeout, buffer);
-                string msg;
-                if (reply.Status == IPStatus.Success)
-                {
-                    Console.WriteLine($"Address: {reply.Address} Found something!");
-                    foundAddressesList.Add(pingedAddress);
-                }
-                else
-                {
-                    Console.WriteLine($"Address: {reply.Address} Nothing here...");
-                }
+                logger = new Logger();
+                resultWriter = new ResultWriter();
+                validators = new Validators();
+                selfIpAddressGetter = new SelfIpAddressGetter();
+                deviceSearcher = new DeviceSearcher(logger);
             }
-            Console.WriteLine("\n\n IP-Addresses with connected devices:");
-            foreach (var addr in foundAddressesList)
+            public Program Build()
             {
-                Console.WriteLine(addr);
+                return new Program(logger, resultWriter, validators, selfIpAddressGetter, deviceSearcher);
             }
         }
-        else
+        public static void Main()
         {
-            Console.WriteLine("Your device is not connected to any network");
+            var program = new Builder()
+                .Build();
+            program.Run();
         }
-    }
 
-    private static string GetSelfLocalIpAddress()
-    {
-        var hostName = Dns.GetHostName();
-        var ipHostEntry = Dns.GetHostEntry(hostName);
 
-        var ipAddress = ipHostEntry.AddressList
-            .FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork);
+        public void Run()
+        {
+            logger.CreateLogFile(fileName);
+            resultWriter.CreateResultFile(fileName);
+            IPAddress selfLocalIp4 = selfLocalIpAddressGetter.GetSelfIp4Address();
+            string selfLocalIp4String = selfLocalIp4.ToString();
 
-        return ipAddress.ToString();
+            string msg = $"Local device Ip detected: {selfLocalIp4String}";
+            logger.Log(msg);
+
+            bool isConnectedToNetwork = validators.IsConnectedValidation(selfLocalIp4String);
+            if (isConnectedToNetwork)
+            {
+                string subnet = selfLocalIp4String.Substring(0, selfLocalIp4String.LastIndexOf('.') + 1);
+
+                msg = $"Processing subnet {subnet}{minSubnetRange} - {subnet}{maxSubnetRange} :\n";
+                logger.Log(msg);
+                List<Device> devices = deviceSearcher.DevicesSearch(minSubnetRange, maxSubnetRange, subnet);
+                resultWriter.WriteResult(devices);
+            }
+            else
+            {
+                logger.Log("Your device is not connected to any network");
+            }
+        }
     }
 }
+
