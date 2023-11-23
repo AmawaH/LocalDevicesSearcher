@@ -2,7 +2,7 @@
 using System;
 using System.Net;
 
-namespace LocalDevicesSearcher.infrastructure
+namespace LocalDevicesSearcher.Infrastructure
 {
     public class IPAddressToJsonConverter : JsonConverter
     {

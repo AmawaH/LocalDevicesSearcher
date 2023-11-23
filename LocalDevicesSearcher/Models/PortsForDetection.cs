@@ -1,21 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LocalDevicesSearcher.Models
 {
-    public class PortsForDetection
+    public interface IPortsForDetection
+    {
+        List<int> GetPorts();
+    }
+    public class PortsForDetection : IPortsForDetection
     {
         private List<int> Ports { get; init; }
         public PortsForDetection()
         {
             Ports = new List<int>();
-            for (int i = 0; i < 1024; i++)
+            for (int i = 1; i < 1024; i++)
             {
                 Ports.Add(i);
             }
+        }
+        public PortsForDetection(List<int> ports)
+        {
+            Ports = ports;
         }
         public List<int> GetPorts()
         {

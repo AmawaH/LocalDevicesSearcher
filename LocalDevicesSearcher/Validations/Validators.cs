@@ -1,21 +1,26 @@
 ﻿namespace LocalDevicesSearcher.Validations
 {
-    public class Validators
+    public interface IValidators
     {
-        private IIpValidator ipValidator;
-        private ICreateFileValidator CreateFileValidator;
+        bool IsConnectedValidation(string ip);
+        bool TryCreateFile(string filename);
+    }
+    public class Validators : IValidators
+    {
+        private IIpValidator isConnectedValidator;
+        private ICanCreateFileValidator canCreateFileValidator;
         public Validators()
         {
-            ipValidator = new IpValidator();
-            CreateFileValidator = new CreateFileValidator();
+            isConnectedValidator = new IsConnectedValidator();
+            canCreateFileValidator = new CanCreateFileValidator();
         }
-        public bool IpValidation(string ip)
+        public bool IsConnectedValidation(string ip)
         {
-            return ipValidator.IpValidation(ip);
+            return isConnectedValidator.IsConnectedValidation(ip);
         }
         public bool TryCreateFile(string filename)
         {
-            return CreateFileValidator.TryCreateFile(filename);
+            return canCreateFileValidator.TryCreateFile(filename);
         }
     }
 }

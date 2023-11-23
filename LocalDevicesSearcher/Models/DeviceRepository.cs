@@ -7,20 +7,34 @@ using System.Collections.Generic;
 
 namespace LocalDevicesSearcher.Models
 {
-    public class DeviceDataCalculator 
+    public interface IDeviceRepository
     {
-        private readonly Device device;
-        public DeviceDataCalculator(IPAddress address, List<int> openedPorts)
+        void AddDevice(IPAddress address, List<int> openedPorts);
+        List<Device> GetDevices();
+    }
+    public class DeviceRepository : IDeviceRepository
+    {
+        private List<Device> devices;
+        public DeviceRepository()
+        {
+            devices = new List<Device>();
+        }
+        public DeviceRepository(List<Device> _devices)
+        {
+            devices = _devices;
+        }
+        public void AddDevice(IPAddress address, List<int> openedPorts)
         {
             IPAddress ip4 = address;
             IPAddress ip6 = GetIp6(address);
             string hostName = GetHostName(address);
             string macAddress = GetMacAddress(address);
-            device = new Device(ip4, ip6, hostName, macAddress, openedPorts);
+            Device device = new Device(ip4, ip6, hostName, macAddress, openedPorts);
+            devices.Add(device);
         }
-        public Device GetDevice()
+        public List<Device> GetDevices()
         {
-            return device;
+            return devices;
         }
         private static IPAddress GetIp6(IPAddress address)
         {
@@ -31,7 +45,7 @@ namespace LocalDevicesSearcher.Models
                     .FirstOrDefault(ip => ip.AddressFamily.ToString() == ProtocolFamily.InterNetworkV6.ToString());
                 return ip6;
             }
-            catch (Exception ex)
+            catch
             {
                 return null;
             }

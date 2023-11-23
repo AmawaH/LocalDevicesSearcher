@@ -1,9 +1,10 @@
-﻿using Newtonsoft.Json;
+﻿using LocalDevicesSearcher.Models;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace LocalDevicesSearcher.infrastructure.ResultWriter
+namespace LocalDevicesSearcher.Infrastructure.ResultWriter
 {
     public interface IResultWriterService
     {

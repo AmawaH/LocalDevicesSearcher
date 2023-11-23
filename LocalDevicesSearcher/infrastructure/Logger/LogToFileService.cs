@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace LocalDevicesSearcher.infrastructure.Logger
+namespace LocalDevicesSearcher.Infrastructure.Logger
 {
     public interface ILogToFileService
     {

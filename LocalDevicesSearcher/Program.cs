@@ -7,39 +7,54 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using LocalDevicesSearcher.Models;
 using System.Collections.Generic;
-using LocalDevicesSearcher.infrastructure.Logger;
-using LocalDevicesSearcher.infrastructure.ResultWriter;
+using LocalDevicesSearcher.Infrastructure.Logger;
+using LocalDevicesSearcher.Infrastructure.ResultWriter;
+using LocalDevicesSearcher.Infrastructure;
 
 namespace LocalDevicesSearcher
 {
     public class Program
     {
-        private readonly Logger logger;
-        private readonly ResultWriter resultWriter;
-        private readonly Validators validators;
-        const int minSubnetRange = 0;
+        private readonly ILogger logger;
+        private readonly IResultWriter resultWriter;
+        private readonly IValidators validators;
+        private readonly ISelfIpAddressGetter selfLocalIpAddressGetter;
+        private readonly IDeviceSearcher deviceSearcher;
+
+        const int minSubnetRange = 1;
         const int maxSubnetRange = 256; 
         static readonly string fileName = DateTime.Now.ToString("yyyyMMdd_HHmmss"); // "TestDir/testfilename";
-        private Program(Logger _logger, ResultWriter _resultWriter, Validators _validators)
+        private Program(ILogger _logger,
+            IResultWriter _resultWriter,
+            IValidators _validators,
+            ISelfIpAddressGetter _selfIpAddressGetter,
+            IDeviceSearcher _deviceSearcher)
         {
             logger = _logger;
             resultWriter = _resultWriter;
             validators = _validators;
+            selfLocalIpAddressGetter = _selfIpAddressGetter;
+            deviceSearcher = _deviceSearcher;
         }
         public class Builder
         {
-            private readonly Logger logger;
-            private readonly ResultWriter resultWriter;
-            private readonly Validators validators;
+            private readonly ILogger logger;
+            private readonly IResultWriter resultWriter;
+            private readonly IValidators validators;
+            private readonly ISelfIpAddressGetter selfIpAddressGetter;
+            private readonly IDeviceSearcher deviceSearcher;
+
             public Builder()
             {
                 logger = new Logger();
                 resultWriter = new ResultWriter();
                 validators = new Validators();
+                selfIpAddressGetter = new SelfIpAddressGetter();
+                deviceSearcher = new DeviceSearcher(logger);
             }
             public Program Build()
             {
-                return new Program(logger, resultWriter, validators);
+                return new Program(logger, resultWriter, validators, selfIpAddressGetter, deviceSearcher);
             }
         }
         public static void Main()
@@ -54,51 +69,26 @@ namespace LocalDevicesSearcher
         {
             logger.CreateLogFile(fileName);
             resultWriter.CreateResultFile(fileName);
-            IPAddress selfLocalIp4 = GetSelfLocalIpAddress();
+            IPAddress selfLocalIp4 = selfLocalIpAddressGetter.GetSelfIp4Address();
             string selfLocalIp4String = selfLocalIp4.ToString();
 
             string msg = $"Local device Ip detected: {selfLocalIp4String}";
             logger.Log(msg);
 
-            bool isConnectedToNetwork = validators.IpValidation(selfLocalIp4String);
+            bool isConnectedToNetwork = validators.IsConnectedValidation(selfLocalIp4String);
             if (isConnectedToNetwork)
             {
                 string subnet = selfLocalIp4String.Substring(0, selfLocalIp4String.LastIndexOf('.') + 1);
 
                 msg = $"Processing subnet {subnet}{minSubnetRange} - {subnet}{maxSubnetRange} :\n";
                 logger.Log(msg);
-
-                Parallel.ForEach(
-                    Enumerable.Range(minSubnetRange, maxSubnetRange - minSubnetRange),
-                        new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount }, // Кількість паралельних потоків
-                        i =>
-                        {
-                            string addressInProcess = subnet + i;
-                            var processor = new Processor(logger, resultWriter);
-                            IPAddress detectedIp = processor.Pinging(addressInProcess);
-                            if (detectedIp is not null)
-                            { 
-                                List<int> openedPorts = processor.PortsDetect(detectedIp);
-                                IPAddress address = detectedIp.MapToIPv4();
-                                var deviceCalculator = new DeviceDataCalculator(address, openedPorts);
-                                Device device = deviceCalculator.GetDevice();
-                                resultWriter.WriteResult(device);
-                            }
-
-                        });
+                List<Device> devices = deviceSearcher.DevicesSearch(minSubnetRange, maxSubnetRange, subnet);
+                resultWriter.WriteResult(devices);
             }
             else
             {
                 logger.Log("Your device is not connected to any network");
             }
-        }
-        private static IPAddress GetSelfLocalIpAddress()
-        {
-            string hostName = Dns.GetHostName();
-            IPHostEntry ipHostEntry = Dns.GetHostEntry(hostName);
-            IPAddress ip4 = ipHostEntry.AddressList
-                .FirstOrDefault(ip => ip.AddressFamily.ToString() == ProtocolFamily.InterNetwork.ToString());
-            return ip4;
         }
     }
 }

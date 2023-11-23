@@ -3,11 +3,11 @@ using System.IO;
 
 namespace LocalDevicesSearcher.Validations
 {
-    public interface ICreateFileValidator
+    public interface ICanCreateFileValidator
     {
         bool TryCreateFile(string filename);
     }
-    public class CreateFileValidator : ICreateFileValidator
+    public class CanCreateFileValidator : ICanCreateFileValidator
     {
         public bool TryCreateFile(string fileName)
         {

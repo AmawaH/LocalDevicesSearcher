@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LocalDevicesSearcher.infrastructure.Logger
+namespace LocalDevicesSearcher.Infrastructure.Logger
 {
     public interface ILogToConsoleService
     {

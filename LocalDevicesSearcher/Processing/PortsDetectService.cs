@@ -1,56 +1,43 @@
-﻿using System;
+﻿using LocalDevicesSearcher.Infrastructure.Logger;
+using LocalDevicesSearcher.Models;
+using Microsoft.VisualBasic;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
-using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using LocalDevicesSearcher.infrastructure.Logger;
-using LocalDevicesSearcher.infrastructure.ResultWriter;
-using LocalDevicesSearcher.Models;
+using System.Threading.Tasks;
 
 namespace LocalDevicesSearcher.Processing
 {
-    public class Processor
+    public interface IPortDetectService
     {
-        private Logger logger;
-        private ResultWriter resultWriter;
-        private const int pingTimeout = 100;
-        public Processor(Logger _logger, ResultWriter _resultWriter)
+        List<int> PortsDetect(IPAddress ipAddress);
+    }
+    public class PortsDetectService : IPortDetectService
+    {
+        private ILogger logger;
+        private IPortsForDetection portsForDetection;
+
+        public PortsDetectService(ILogger _logger)
         {
             logger = _logger;
-            resultWriter = _resultWriter;
+            portsForDetection = new PortsForDetection();
         }
-        public IPAddress Pinging(string pingedAddress)
+        public PortsDetectService(ILogger logger, IPortsForDetection portsForDetection) : this(logger)
         {
-            byte[] buffer = Encoding.ASCII.GetBytes("PingingMessage");
-            Ping pinger = new Ping();
-            PingReply reply = pinger.Send(pingedAddress, pingTimeout, buffer);
-            IPAddress replyAddress = reply.Address;
-            if (reply.Status == IPStatus.Success)
-            {
-                string msg = $"Pinged address: {replyAddress} Found something!";
-                logger.Log(msg);
-
-                return replyAddress;
-            }
-            else
-            {
-                string msg = $"Pinged address: {replyAddress} Nothing here...";
-                logger.Log(msg);
-                return null;
-            }
+            this.portsForDetection = portsForDetection;
         }
-
         public List<int> PortsDetect(IPAddress ipAddress)
         {
-            PortsForDetection portsForDetection = new PortsForDetection();
             List<int> portsForDetectionList = portsForDetection.GetPorts();
-            List<int> openedPorts = new List<int> { };
+            List<int> openedPorts = new();
             int maxPortIndex = portsForDetectionList.Count;
             int numThreads = 10;
             int portsPerThread = maxPortIndex / numThreads;
-            List<Thread> threads = new List<Thread>();
+            List<Thread> threads = new();
 
             string msg = $"Detecting opened ports for {ipAddress}";
             logger.Log(msg);
@@ -59,11 +46,10 @@ namespace LocalDevicesSearcher.Processing
             {
                 int startPortIndex = i * portsPerThread + 1;
                 int endPortIndex = (i == numThreads - 1) ? maxPortIndex : (i + 1) * portsPerThread;
-
                 Thread thread = new Thread(
                     () => {
-                    int port = CheckPorts(startPortIndex, endPortIndex, ipAddress, portsForDetectionList);
-                    if (port != 0)
+                        int port = CheckPorts(startPortIndex, endPortIndex, ipAddress, portsForDetectionList);
+                        if (port != 0)
                         {
                             openedPorts.Add(port);
                         }
@@ -80,21 +66,26 @@ namespace LocalDevicesSearcher.Processing
             {
                 portsString.Add(port.ToString());
             }
+
             msg = $"Opened ports for {ipAddress}: ";
-            msg += String.Join(", ", portsString.ToArray());   
-            logger.Log(msg); 
+            msg += String.Join(", ", portsString.ToArray());
+            logger.Log(msg);
+
             return openedPorts;
         }
-        public int CheckPorts(int startPortindex, int endPortindex, IPAddress ipAddress, List<int> portsForDetectionList)
+        private int CheckPorts(int startPortindex, int endPortindex, IPAddress ipAddress, List<int> portsForDetectionList)
         {
             for (int i = startPortindex; i <= endPortindex; i++)
             {
-                int port = portsForDetectionList[i-1];
-                Console.WriteLine($"Trying port {port}");
+                int port = portsForDetectionList[i - 1];
+
+                string msg = $"Trying port {ipAddress}:{port}";
+                logger.Log(msg);
+
                 bool isOpen = IsPortOpen(ipAddress, port);
                 if (isOpen)
                 {
-                        return port;
+                    return port;
                 }
             }
             return 0;
@@ -114,5 +105,6 @@ namespace LocalDevicesSearcher.Processing
                 return false;
             }
         }
+
     }
 }

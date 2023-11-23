@@ -1,10 +1,16 @@
-﻿using LocalDevicesSearcher.Validations;
+﻿using LocalDevicesSearcher.Models;
+using LocalDevicesSearcher.Validations;
+using System.Collections.Generic;
 
-
-namespace LocalDevicesSearcher.infrastructure.ResultWriter
+namespace LocalDevicesSearcher.Infrastructure.ResultWriter
 {
-
-    public class ResultWriter
+    public interface IResultWriter
+    {
+        void SetResultFileName(string fileName);
+        void WriteResult(List<Device> devices);
+        void CreateResultFile(string path);
+    }
+    public class ResultWriter : IResultWriter
     {
         private bool canWriteResultInFile;
         private string resultFileName;
@@ -13,15 +19,24 @@ namespace LocalDevicesSearcher.infrastructure.ResultWriter
         {
             resultWriterService = new ResultWriterService();
         }
-
-        public void WriteResult(Device device)
+        public ResultWriter(IResultWriterService _resultWriterService)
         {
-            if (canWriteResultInFile)
+            resultWriterService = _resultWriterService;
+        }
+        public void SetResultFileName(string fileName)
+        {
+            resultFileName = fileName;
+        }
+        public void WriteResult(List<Device> devices)
+        {
+            if ((canWriteResultInFile)&&(devices != null))
             {
-                resultWriterService.WriteToResultFile(resultFileName, device);
+                foreach (Device device in devices)
+                {
+                    resultWriterService.WriteToResultFile(resultFileName, device);
+                }
             }
         }
-
         public void CreateResultFile(string path)
         {
             resultFileName = $"{path}.json";
