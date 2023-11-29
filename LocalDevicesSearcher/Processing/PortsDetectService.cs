@@ -18,21 +18,21 @@ namespace LocalDevicesSearcher.Processing
     }
     public class PortsDetectService : IPortDetectService
     {
-        private ILogger logger;
-        private IPortsForDetection portsForDetection;
+        private ILogger _logger;
+        private IPortsForDetection _portsForDetection;
 
-        public PortsDetectService(ILogger _logger)
+        public PortsDetectService(ILogger logger)
         {
-            logger = _logger;
-            portsForDetection = new PortsForDetection();
+            _logger = logger;
+            _portsForDetection = new PortsForDetection();
         }
         public PortsDetectService(ILogger logger, IPortsForDetection portsForDetection) : this(logger)
         {
-            this.portsForDetection = portsForDetection;
+            _portsForDetection = portsForDetection;
         }
         public List<int> PortsDetect(IPAddress ipAddress)
         {
-            List<int> portsForDetectionList = portsForDetection.GetPorts();
+            List<int> portsForDetectionList = _portsForDetection.GetPorts();
             List<int> openedPorts = new();
             int maxPortIndex = portsForDetectionList.Count;
             int numThreads = 10;
@@ -40,7 +40,7 @@ namespace LocalDevicesSearcher.Processing
             List<Thread> threads = new();
 
             string msg = $"Detecting opened ports for {ipAddress}";
-            logger.Log(msg);
+            _logger.Log(msg);
 
             for (int i = 0; i < numThreads; i++)
             {
@@ -69,7 +69,7 @@ namespace LocalDevicesSearcher.Processing
 
             msg = $"Opened ports for {ipAddress}: ";
             msg += String.Join(", ", portsString.ToArray());
-            logger.Log(msg);
+            _logger.Log(msg);
 
             return openedPorts;
         }
@@ -80,7 +80,7 @@ namespace LocalDevicesSearcher.Processing
                 int port = portsForDetectionList[i - 1];
 
                 string msg = $"Trying port {ipAddress}:{port}";
-                logger.Log(msg);
+                _logger.Log(msg);
 
                 bool isOpen = IsPortOpen(ipAddress, port);
                 if (isOpen)

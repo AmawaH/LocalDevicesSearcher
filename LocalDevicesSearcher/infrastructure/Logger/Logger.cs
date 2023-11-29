@@ -12,48 +12,48 @@ namespace LocalDevicesSearcher.Infrastructure.Logger
     }
     public class Logger : ILogger
     {
-        private string logFileName;
-        private bool canLogInFile;
-        private ILogToConsoleService logToConsoleService;
-        private ILogToFileService logToFileService;
+        private string _logFileName;
+        private bool _canLogInFile;
+        private ILogToConsoleService _logToConsoleService;
+        private ILogToFileService _logToFileService;
         public Logger()
         {
-            canLogInFile = true;
-            logToConsoleService = new LogToConsoleService();
-            logToFileService = new LogToFileService();
+            _canLogInFile = true;
+            _logToConsoleService = new LogToConsoleService();
+            _logToFileService = new LogToFileService();
         }
-        public Logger(ILogToConsoleService _logToConsoleService)
+        public Logger(ILogToConsoleService logToConsoleService)
         {
-            logToConsoleService = _logToConsoleService;
+            _logToConsoleService = logToConsoleService;
         }
 
-        public Logger(ILogToConsoleService _logToConsoleService, ILogToFileService _logToFileService) : this(_logToConsoleService)
+        public Logger(ILogToConsoleService logToConsoleService, ILogToFileService logToFileService) : this(logToConsoleService)
         {
-            logToFileService = _logToFileService;
+            _logToFileService = logToFileService;
         }
         public void SetLogFileName(string fileName)
         {
-            logFileName = fileName;
+            _logFileName = fileName;
         }
         public void Log(string message)
         {
             string time = DateTime.Now.ToString("G");
             string content = $"{time}  {message}";
-            logToConsoleService.WriteToConsole(content);
-            if (canLogInFile)
+            _logToConsoleService.WriteToConsole(content);
+            if (_canLogInFile)
             {
-                logToFileService.WriteToLogFile(logFileName, content);
+                _logToFileService.WriteToLogFile(_logFileName, content);
             }
         }
         public void CreateLogFile(string path)
         {
-            logFileName = $"{path}.log";
-            var validators = new Validators();
-            canLogInFile = validators.TryCreateFile(logFileName);
+            _logFileName = $"{path}.log";
+            ICanCreateFileValidator canCreateFileValidator = new CanCreateFileValidator();
+            _canLogInFile = canCreateFileValidator.TryCreateFile(_logFileName);
         }
         public void DisableLogToFileLogging()
         {
-            canLogInFile = false;
+            _canLogInFile = false;
         }
     }
 

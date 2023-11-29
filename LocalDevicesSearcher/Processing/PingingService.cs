@@ -15,11 +15,11 @@ namespace LocalDevicesSearcher.Processing
     }
     public class PingingService : IPingingService
     {
-        private ILogger logger;
+        private ILogger _logger;
         private const int pingTimeout = 100;
-        public PingingService(ILogger _logger)
+        public PingingService(ILogger logger)
         {
-            logger = _logger;
+            _logger = logger;
         } 
         public IPAddress Pinging(string pingedAddress)
         {
@@ -32,14 +32,14 @@ namespace LocalDevicesSearcher.Processing
                 if (reply.Status == IPStatus.Success)
                 {
                     string msg = $"Pinged address: {replyAddress} Found something!";
-                    logger.Log(msg);
+                    _logger.Log(msg);
 
                     return replyAddress;
                 }
                 else
                 {
                     string msg = $"Pinged address: {replyAddress} Nothing here...";
-                    logger.Log(msg);
+                    _logger.Log(msg);
 
                     return null;
                 }
@@ -49,7 +49,7 @@ namespace LocalDevicesSearcher.Processing
                 string exMsg = ex.Message;
 
                 string msg = $"Error {exMsg} while pinging {pingedAddress}";
-                logger.Log(msg);
+                _logger.Log(msg);
 
                 return null;
             }

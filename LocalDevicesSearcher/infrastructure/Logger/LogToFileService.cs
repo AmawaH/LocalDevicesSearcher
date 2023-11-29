@@ -15,6 +15,8 @@ namespace LocalDevicesSearcher.Infrastructure.Logger
                 using (StreamWriter writer = new StreamWriter(logFileName, true))
                 {
                     writer.WriteLine(content);
+                    writer.Flush();
+                    writer.Close();
                 }
             }
         }

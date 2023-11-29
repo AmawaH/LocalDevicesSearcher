@@ -20,6 +20,8 @@ namespace LocalDevicesSearcher.Infrastructure.ResultWriter
                 {
                     var content = JsonConvert.SerializeObject(device);
                     writer.WriteLine(content);
+                    writer.Flush();
+                    writer.Close();
                 }
             }
         }

@@ -1,10 +1,10 @@
 ﻿namespace LocalDevicesSearcher.Validations
 {
-    public interface IIpValidator
+    public interface IIsConnectedValidator
     {
         bool IsConnectedValidation(string ip);
     }
-    public class IsConnectedValidator : IIpValidator
+    public class IsConnectedValidator : IIsConnectedValidator
     {
         public bool IsConnectedValidation(string ip)
         {

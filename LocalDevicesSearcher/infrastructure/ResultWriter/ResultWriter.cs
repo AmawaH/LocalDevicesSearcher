@@ -12,36 +12,36 @@ namespace LocalDevicesSearcher.Infrastructure.ResultWriter
     }
     public class ResultWriter : IResultWriter
     {
-        private bool canWriteResultInFile;
-        private string resultFileName;
-        private IResultWriterService resultWriterService;
+        private bool _canWriteResultInFile;
+        private string _resultFileName;
+        private IResultWriterService _resultWriterService;
         public ResultWriter()
         {
-            resultWriterService = new ResultWriterService();
+            _resultWriterService = new ResultWriterService();
         }
-        public ResultWriter(IResultWriterService _resultWriterService)
+        public ResultWriter(IResultWriterService resultWriterService)
         {
-            resultWriterService = _resultWriterService;
+            _resultWriterService = resultWriterService;
         }
         public void SetResultFileName(string fileName)
         {
-            resultFileName = fileName;
+            _resultFileName = fileName;
         }
         public void WriteResult(List<Device> devices)
         {
-            if ((canWriteResultInFile)&&(devices != null))
+            if ((_canWriteResultInFile)&&(devices != null))
             {
                 foreach (Device device in devices)
                 {
-                    resultWriterService.WriteToResultFile(resultFileName, device);
+                    _resultWriterService.WriteToResultFile(_resultFileName, device);
                 }
             }
         }
         public void CreateResultFile(string path)
         {
-            resultFileName = $"{path}.json";
-            var validators = new Validators();
-            canWriteResultInFile = validators.TryCreateFile(resultFileName);
+            _resultFileName = $"{path}.json";
+            ICanCreateFileValidator canCreateFileValidator = new CanCreateFileValidator();
+            _canWriteResultInFile = canCreateFileValidator.TryCreateFile(_resultFileName);
         }
     }
 }

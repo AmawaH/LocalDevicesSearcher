@@ -14,30 +14,30 @@ namespace LocalDevicesSearcher.Processing
     }
     public class DeviceSearcher : IDeviceSearcher
     { 
-        private ILogger logger;
-        private IPingingService pingingService;
-        private IPortDetectService portsDetectService;
-        private IDeviceRepository deviceRepository;
-        public DeviceSearcher(ILogger _logger)
+        private ILogger _logger;
+        private IPingingService _pingingService;
+        private IPortDetectService _portsDetectService;
+        private IDeviceRepository _deviceRepository;
+        public DeviceSearcher(ILogger logger)
         {
-            logger = _logger;
-            pingingService = new PingingService(logger);
-            portsDetectService = new PortsDetectService(logger);
-            deviceRepository = new DeviceRepository();
+            _logger = logger;
+            _pingingService = new PingingService(logger);
+            _portsDetectService = new PortsDetectService(logger);
+            _deviceRepository = new DeviceRepository();
         }
-        public DeviceSearcher(ILogger _logger, IPingingService _pingingService)
+        public DeviceSearcher(ILogger logger, IPingingService pingingService)
         {
-            logger = _logger;
-            pingingService = _pingingService;
-            portsDetectService = new PortsDetectService(logger);
-            deviceRepository = new DeviceRepository();
+            _logger = logger;
+            _pingingService = pingingService;
+            _portsDetectService = new PortsDetectService(logger);
+            _deviceRepository = new DeviceRepository();
         }
-        public DeviceSearcher(ILogger _logger, IPingingService _pingingService, IPortDetectService _portsDetectService, IDeviceRepository _deviceRepository)
+        public DeviceSearcher(ILogger logger, IPingingService pingingService, IPortDetectService portsDetectService, IDeviceRepository deviceRepository)
         {
-            logger = _logger;
-            pingingService = _pingingService;
-            portsDetectService = _portsDetectService;
-            deviceRepository = _deviceRepository;
+            _logger = logger;
+            _pingingService = pingingService;
+            _portsDetectService = portsDetectService;
+            _deviceRepository = deviceRepository;
         }
         public List<Device> DevicesSearch(int minSubnetRange, int maxSubnetRange, string subnet)
         {
@@ -47,14 +47,14 @@ namespace LocalDevicesSearcher.Processing
                         i =>
                         {
                             string addressInProcess = subnet + i;
-                            IPAddress detectedIp = pingingService.Pinging(addressInProcess);
+                            IPAddress detectedIp = _pingingService.Pinging(addressInProcess);
                             if (detectedIp is not null)
                             {
-                                List<int> openedPorts = portsDetectService.PortsDetect(detectedIp);
-                                deviceRepository.AddDevice(detectedIp, openedPorts);
+                                List<int> openedPorts = _portsDetectService.PortsDetect(detectedIp);
+                                _deviceRepository.AddDevice(detectedIp, openedPorts);
                             }
                         });
-            var devices = deviceRepository.GetDevices();
+            var devices = _deviceRepository.GetDevices();
             return devices;
         }
     }

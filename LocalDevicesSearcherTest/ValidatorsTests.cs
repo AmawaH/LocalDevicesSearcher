@@ -1,10 +1,4 @@
 ﻿using LocalDevicesSearcher.Validations;
-using Moq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LocalDevicesSearcherTest
 {
@@ -16,10 +10,10 @@ namespace LocalDevicesSearcherTest
         public void IsConnectedValidation_ShouldReturnExpectedResult(string ip, bool expectedResult)
         {
             // Arrange
-            var validator = new Validators();
+            IIsConnectedValidator isConnectedValidator = new IsConnectedValidator();
 
             // Act
-            bool result = validator.IsConnectedValidation(ip);
+            bool result = isConnectedValidator.IsConnectedValidation(ip);
 
             // Assert
             Assert.Equal(expectedResult, result);
@@ -28,11 +22,11 @@ namespace LocalDevicesSearcherTest
         public void TryCreateFile_ValidFileName_CreatesFile()
         {
             // Arrange
-            var validator = new Validators();
+            ICanCreateFileValidator canCreateFileValidator = new CanCreateFileValidator();
             var fileName = "test.txt";
 
             // Act
-            bool result = validator.TryCreateFile(fileName);
+            bool result = canCreateFileValidator.TryCreateFile(fileName);
 
             // Assert
             Assert.True(result);
@@ -46,11 +40,11 @@ namespace LocalDevicesSearcherTest
         public void TryCreateFile_InvalidFileName_ReturnsFalse()
         {
             // Arrange
-            var validator = new Validators();
+            ICanCreateFileValidator canCreateFileValidator = new CanCreateFileValidator();
             var fileName = @"C:\Windows\System32\invalid.txt"; // An invalid path
 
             // Act
-            bool result = validator.TryCreateFile(fileName);
+            bool result = canCreateFileValidator.TryCreateFile(fileName);
 
             // Assert
             Assert.False(result);
