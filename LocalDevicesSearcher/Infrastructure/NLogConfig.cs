@@ -9,6 +9,7 @@ namespace LocalDevicesSearcher.Infrastructure
     public class NLogConfig
     {
         public NLogConfig() {
+            //
             var config = new LoggingConfiguration();
             //Targets:
             var fileTarget = new FileTarget("fileTarget")
