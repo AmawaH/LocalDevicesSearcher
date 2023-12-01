@@ -1,13 +1,13 @@
-﻿using LocalDevicesSearcher.Infrastructure.Logger;
-using LocalDevicesSearcher.Infrastructure.ResultWriter;
+﻿using LocalDevicesSearcher.Infrastructure.ResultWriter;
 using LocalDevicesSearcher.Infrastructure;
 using LocalDevicesSearcher.Processing;
 using LocalDevicesSearcher.Validations;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using System.IO;
+using NLog.Extensions.Logging;
+using NLog.Config;
+using NLog.Targets;
 
 namespace LocalDevicesSearcher
 {
@@ -20,7 +20,7 @@ namespace LocalDevicesSearcher
         private readonly IDeviceSearcher _deviceSearcher;
         public Builder()
         {
-            _logger = new Logger();
+            _logger = new NLogConfig().GetNLogLogger();
             _resultWriter = new ResultWriter();
             _isConnectedValidator = new IsConnectedValidator();
             _selfIpAddressGetter = new SelfIpAddressGetter();

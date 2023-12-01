@@ -1,14 +1,9 @@
-﻿using LocalDevicesSearcher.Infrastructure.Logger;
-using LocalDevicesSearcher.Models;
+﻿using LocalDevicesSearcher.Models;
 using LocalDevicesSearcher.Processing;
+using Microsoft.Extensions.Logging;
 using Moq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LocalDevicesSearcherTest
 {
@@ -20,7 +15,6 @@ namespace LocalDevicesSearcherTest
             // Arrange
             IPAddress ipAddress = IPAddress.Parse("127.0.0.1");
             var loggerMock = new Mock<ILogger>();
-            loggerMock.Setup(x => x.Log(It.IsAny<string>()));
             var portsForDetectionMock = new Mock<IPortsForDetection>();
             List<int> testPortsList = new() { 20000, 20001, 20002, 20004 };
             portsForDetectionMock.Setup(pfdm => pfdm.GetPorts()).Returns(testPortsList);

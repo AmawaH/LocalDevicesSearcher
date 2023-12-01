@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using LocalDevicesSearcher.Infrastructure.Logger;
 using LocalDevicesSearcher.Models;
+using Microsoft.Extensions.Logging;
 
 namespace LocalDevicesSearcher.Processing
 {
@@ -13,7 +13,7 @@ namespace LocalDevicesSearcher.Processing
         List<Device> DevicesSearch(int minSubnetRange, int maxSubnetRange, string subnet);
     }
     public class DeviceSearcher : IDeviceSearcher
-    { 
+    {
         private ILogger _logger;
         private IPingingService _pingingService;
         private IPortDetectService _portsDetectService;
@@ -29,7 +29,7 @@ namespace LocalDevicesSearcher.Processing
         {
             _logger = logger;
             _pingingService = pingingService;
-            _portsDetectService = new PortsDetectService(logger);
+            _portsDetectService = new PortsDetectService(_logger);
             _deviceRepository = new DeviceRepository();
         }
         public DeviceSearcher(ILogger logger, IPingingService pingingService, IPortDetectService portsDetectService, IDeviceRepository deviceRepository)
