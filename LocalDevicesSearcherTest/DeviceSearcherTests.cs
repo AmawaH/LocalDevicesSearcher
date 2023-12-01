@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using LocalDevicesSearcher.Infrastructure;
-using LocalDevicesSearcher.Infrastructure.Logger;
 using LocalDevicesSearcher.Models;
 using LocalDevicesSearcher.Processing;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
@@ -21,7 +21,6 @@ namespace LocalDevicesSearcherTest
             var maxSubnetRange = 3;
             var subnet = "192.168.0.";
             var loggerMock = new Mock<ILogger>();
-            loggerMock.Setup(x => x.Log(It.IsAny<string>()));
             var pingingServiceMock = new Mock<IPingingService>();
             ISelfIpAddressGetter selfIpAddressGetter = new SelfIpAddressGetter();
             IPAddress testIp = selfIpAddressGetter.GetSelfIp4Address();
@@ -48,7 +47,6 @@ namespace LocalDevicesSearcherTest
             var maxSubnetRange = 3;
             var subnet = "192.168.0.";
             var loggerMock = new Mock<ILogger>();
-            loggerMock.Setup(x => x.Log(It.IsAny<string>()));
             var pingingServiceMock = new Mock<IPingingService>();
             IPAddress testIp = null;
             pingingServiceMock.Setup(ps => ps.Pinging(It.IsAny<string>())).Returns(testIp);

@@ -1,4 +1,4 @@
-﻿using LocalDevicesSearcher.Infrastructure.Logger;
+﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,14 +32,14 @@ namespace LocalDevicesSearcher.Processing
                 if (reply.Status == IPStatus.Success)
                 {
                     string msg = $"Pinged address: {replyAddress} Found something!";
-                    _logger.Log(msg);
+                    _logger.LogInformation(msg);
 
                     return replyAddress;
                 }
                 else
                 {
                     string msg = $"Pinged address: {replyAddress} Nothing here...";
-                    _logger.Log(msg);
+                    _logger.LogInformation(msg);
 
                     return null;
                 }
@@ -49,7 +49,7 @@ namespace LocalDevicesSearcher.Processing
                 string exMsg = ex.Message;
 
                 string msg = $"Error {exMsg} while pinging {pingedAddress}";
-                _logger.Log(msg);
+                _logger.LogInformation(msg);
 
                 return null;
             }

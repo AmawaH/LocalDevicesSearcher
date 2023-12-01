@@ -1,5 +1,4 @@
-﻿using LocalDevicesSearcher.Infrastructure.Logger;
-using LocalDevicesSearcher.Infrastructure.ResultWriter;
+﻿using LocalDevicesSearcher.Infrastructure.ResultWriter;
 using LocalDevicesSearcher.Infrastructure;
 using LocalDevicesSearcher.Processing;
 using LocalDevicesSearcher.Validations;
@@ -7,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using LocalDevicesSearcher.Models;
 using System.Net;
+using Microsoft.Extensions.Logging;
 
 namespace LocalDevicesSearcher
 {
@@ -35,13 +35,12 @@ namespace LocalDevicesSearcher
         }
         public void Run()
         {
-            _logger.CreateLogFile(fileName);
             _resultWriter.CreateResultFile(fileName);
             IPAddress selfLocalIp4 = _selfLocalIpAddressGetter.GetSelfIp4Address();
             string selfLocalIp4String = selfLocalIp4.ToString();
 
             string msg = $"Local device Ip detected: {selfLocalIp4String}";
-            _logger.Log(msg);
+            _logger.LogInformation(msg);
 
             bool isConnectedToNetwork = _isConnectedValidator.IsConnectedValidation(selfLocalIp4String);
             if (isConnectedToNetwork)
@@ -49,13 +48,14 @@ namespace LocalDevicesSearcher
                 string subnet = selfLocalIp4String.Substring(0, selfLocalIp4String.LastIndexOf('.') + 1);
 
                 msg = $"Processing subnet {subnet}{minSubnetRange} - {subnet}{maxSubnetRange} :\n";
-                _logger.Log(msg);
+                _logger.LogInformation(msg);
+
                 List<Device> devices = _deviceSearcher.DevicesSearch(minSubnetRange, maxSubnetRange, subnet);
                 _resultWriter.WriteResult(devices);
             }
             else
             {
-                _logger.Log("Your device is not connected to any network");
+                _logger.LogInformation("Your device is not connected to any network");
             }
         }
     }
