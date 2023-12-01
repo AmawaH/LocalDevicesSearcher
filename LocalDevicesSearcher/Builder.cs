@@ -1,13 +1,9 @@
 ﻿using LocalDevicesSearcher.Infrastructure.ResultWriter;
+using LocalDevicesSearcher.Infrastructure.Logger;
 using LocalDevicesSearcher.Infrastructure;
 using LocalDevicesSearcher.Processing;
 using LocalDevicesSearcher.Validations;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System.IO;
-using NLog.Extensions.Logging;
-using NLog.Config;
-using NLog.Targets;
 
 namespace LocalDevicesSearcher
 {

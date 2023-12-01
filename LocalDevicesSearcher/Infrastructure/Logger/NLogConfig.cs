@@ -1,15 +1,18 @@
 ﻿using Microsoft.Extensions.Logging;
+using NLog.Common;
 using NLog.Config;
 using NLog.Extensions.Logging;
 using NLog.Targets;
 using System;
 
-namespace LocalDevicesSearcher.Infrastructure
+namespace LocalDevicesSearcher.Infrastructure.Logger
 {
     public class NLogConfig
     {
-        public NLogConfig() {
-            //
+        public NLogConfig()
+        {
+            InternalLogger.LogToConsole = true;
+            InternalLogger.LogToConsoleError = true;
             var config = new LoggingConfiguration();
             //Targets:
             var fileTarget = new FileTarget("fileTarget")

@@ -1,10 +1,4 @@
-﻿
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
-using System.IO;
-using System.Reflection;
-
-namespace LocalDevicesSearcher
+﻿namespace LocalDevicesSearcher
 {
     public class Program
     {

@@ -57,6 +57,7 @@ namespace LocalDevicesSearcher
             {
                 _logger.LogInformation("Your device is not connected to any network");
             }
+            NLog.LogManager.Shutdown();
         }
     }
 }
