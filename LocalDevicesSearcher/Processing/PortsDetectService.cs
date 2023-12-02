@@ -1,14 +1,10 @@
-﻿using LocalDevicesSearcher.Infrastructure.Logger;
-using LocalDevicesSearcher.Models;
-using Microsoft.VisualBasic;
+﻿using LocalDevicesSearcher.Models;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace LocalDevicesSearcher.Processing
 {
@@ -18,29 +14,30 @@ namespace LocalDevicesSearcher.Processing
     }
     public class PortsDetectService : IPortDetectService
     {
-        private ILogger logger;
-        private IPortsForDetection portsForDetection;
+        private ILogger _logger;
+        private IPortsForDetection _portsForDetection;
 
-        public PortsDetectService(ILogger _logger)
+        public PortsDetectService(ILogger logger)
         {
-            logger = _logger;
-            portsForDetection = new PortsForDetection();
+            _logger = logger;
+            _portsForDetection = new PortsForDetection();
         }
-        public PortsDetectService(ILogger logger, IPortsForDetection portsForDetection) : this(logger)
+        public PortsDetectService(ILogger logger, IPortsForDetection portsForDetection)
         {
-            this.portsForDetection = portsForDetection;
+            _logger = logger;
+            _portsForDetection = portsForDetection;
         }
         public List<int> PortsDetect(IPAddress ipAddress)
         {
-            List<int> portsForDetectionList = portsForDetection.GetPorts();
+            List<int> portsForDetectionList = _portsForDetection.GetPorts();
             List<int> openedPorts = new();
             int maxPortIndex = portsForDetectionList.Count;
             int numThreads = 10;
             int portsPerThread = maxPortIndex / numThreads;
             List<Thread> threads = new();
-
+            
             string msg = $"Detecting opened ports for {ipAddress}";
-            logger.Log(msg);
+            _logger.LogInformation(msg);
 
             for (int i = 0; i < numThreads; i++)
             {
@@ -69,7 +66,7 @@ namespace LocalDevicesSearcher.Processing
 
             msg = $"Opened ports for {ipAddress}: ";
             msg += String.Join(", ", portsString.ToArray());
-            logger.Log(msg);
+            _logger.LogInformation(msg);
 
             return openedPorts;
         }
@@ -80,7 +77,7 @@ namespace LocalDevicesSearcher.Processing
                 int port = portsForDetectionList[i - 1];
 
                 string msg = $"Trying port {ipAddress}:{port}";
-                logger.Log(msg);
+                _logger.LogTrace(msg);
 
                 bool isOpen = IsPortOpen(ipAddress, port);
                 if (isOpen)

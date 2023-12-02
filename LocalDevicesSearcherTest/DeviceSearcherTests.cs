@@ -2,9 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using LocalDevicesSearcher.Infrastructure;
-using LocalDevicesSearcher.Infrastructure.Logger;
+using LocalDevicesSearcher.Infrastructure.ResultWriter;
 using LocalDevicesSearcher.Models;
 using LocalDevicesSearcher.Processing;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
@@ -21,7 +22,7 @@ namespace LocalDevicesSearcherTest
             var maxSubnetRange = 3;
             var subnet = "192.168.0.";
             var loggerMock = new Mock<ILogger>();
-            loggerMock.Setup(x => x.Log(It.IsAny<string>()));
+            var resultWriterMock = new Mock<IResultWriter>();
             var pingingServiceMock = new Mock<IPingingService>();
             ISelfIpAddressGetter selfIpAddressGetter = new SelfIpAddressGetter();
             IPAddress testIp = selfIpAddressGetter.GetSelfIp4Address();
@@ -30,10 +31,11 @@ namespace LocalDevicesSearcherTest
             List<int> testPortList = new List<int> { 1, 2, 3, 4 };
             portsDetectServiceMock.Setup(pds => pds.PortsDetect(It.IsAny<IPAddress>())).Returns(testPortList);
             IDeviceRepository deviceRepository = new DeviceRepository();
-            var deviceSearcher = new DeviceSearcher(loggerMock.Object, pingingServiceMock.Object, portsDetectServiceMock.Object, deviceRepository);
+            var deviceSearcher = new DeviceSearcher(loggerMock.Object, resultWriterMock.Object ,pingingServiceMock.Object, portsDetectServiceMock.Object, deviceRepository);
 
             // Act
-            var devices = deviceSearcher.DevicesSearch(minSubnetRange, maxSubnetRange, subnet);
+            deviceSearcher.DevicesSearch(minSubnetRange, maxSubnetRange, subnet);
+            var devices = deviceRepository.GetDevices();
 
             // Assert
             Assert.NotNull(devices);
@@ -48,15 +50,16 @@ namespace LocalDevicesSearcherTest
             var maxSubnetRange = 3;
             var subnet = "192.168.0.";
             var loggerMock = new Mock<ILogger>();
-            loggerMock.Setup(x => x.Log(It.IsAny<string>()));
             var pingingServiceMock = new Mock<IPingingService>();
             IPAddress testIp = null;
             pingingServiceMock.Setup(ps => ps.Pinging(It.IsAny<string>())).Returns(testIp);
-            var deviceSearcher = new DeviceSearcher(loggerMock.Object, pingingServiceMock.Object);
+            IDeviceRepository deviceRepository = new DeviceRepository();
+            var deviceSearcher = new DeviceSearcher(loggerMock.Object, null ,pingingServiceMock.Object, null, deviceRepository);
 
             // Act
-            var devices = deviceSearcher.DevicesSearch(minSubnetRange, maxSubnetRange, subnet);
-
+            deviceSearcher.DevicesSearch(minSubnetRange, maxSubnetRange, subnet);
+            var devices = deviceRepository.GetDevices();
+            
             // Assert
             Assert.Empty(devices);
         }

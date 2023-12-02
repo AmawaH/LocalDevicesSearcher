@@ -9,7 +9,7 @@ namespace LocalDevicesSearcher.Models
 {
     public interface IDeviceRepository
     {
-        void AddDevice(IPAddress address, List<int> openedPorts);
+        Device AddDevice(IPAddress address, List<int> openedPorts);
         List<Device> GetDevices();
     }
     public class DeviceRepository : IDeviceRepository
@@ -23,7 +23,7 @@ namespace LocalDevicesSearcher.Models
         {
             devices = _devices;
         }
-        public void AddDevice(IPAddress address, List<int> openedPorts)
+        public Device AddDevice(IPAddress address, List<int> openedPorts)
         {
             IPAddress ip4 = address;
             IPAddress ip6 = GetIp6(address);
@@ -31,6 +31,7 @@ namespace LocalDevicesSearcher.Models
             string macAddress = GetMacAddress(address);
             Device device = new Device(ip4, ip6, hostName, macAddress, openedPorts);
             devices.Add(device);
+            return device;
         }
         public List<Device> GetDevices()
         {

@@ -1,7 +1,5 @@
 ﻿using LocalDevicesSearcher.Models;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
 using System.IO;
 
 namespace LocalDevicesSearcher.Infrastructure.ResultWriter
@@ -20,6 +18,8 @@ namespace LocalDevicesSearcher.Infrastructure.ResultWriter
                 {
                     var content = JsonConvert.SerializeObject(device);
                     writer.WriteLine(content);
+                    writer.Flush();
+                    writer.Close();
                 }
             }
         }
