@@ -33,7 +33,7 @@ namespace LocalDevicesSearcher.Infrastructure.Logger
             config.AddRule(NLog.LogLevel.Info, NLog.LogLevel.Fatal, fileTarget);
             NLog.LogManager.Configuration = config;
         }
-        public static ILogger GetNLogLogger()
+        public ILogger GetNLogLogger()
         {
             var loggerFactory = LoggerFactory.Create(builder =>
             {
