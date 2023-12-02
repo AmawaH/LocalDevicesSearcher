@@ -1,5 +1,6 @@
 ﻿using LocalDevicesSearcher.Models;
 using LocalDevicesSearcher.Validations;
+using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 
 namespace LocalDevicesSearcher.Infrastructure.ResultWriter
@@ -8,6 +9,7 @@ namespace LocalDevicesSearcher.Infrastructure.ResultWriter
     {
         void SetResultFileName(string fileName);
         void WriteResult(List<Device> devices);
+        void WriteResult(Device device);
         void CreateResultFile(string path);
     }
     public class ResultWriter : IResultWriter
@@ -19,7 +21,7 @@ namespace LocalDevicesSearcher.Infrastructure.ResultWriter
         {
             _resultWriterService = new ResultWriterService();
         }
-        public ResultWriter(IResultWriterService resultWriterService)
+        public ResultWriter(IResultWriterService resultWriterService) 
         {
             _resultWriterService = resultWriterService;
         }
@@ -35,6 +37,13 @@ namespace LocalDevicesSearcher.Infrastructure.ResultWriter
                 {
                     _resultWriterService.WriteToResultFile(_resultFileName, device);
                 }
+            }
+        }
+        public void WriteResult(Device device)
+        {
+            if ((_canWriteResultInFile)&&(device != null))
+            { 
+                _resultWriterService.WriteToResultFile(_resultFileName, device);
             }
         }
         public void CreateResultFile(string path)

@@ -13,18 +13,16 @@ namespace LocalDevicesSearcher
         private readonly IResultWriter _resultWriter;
         private readonly IIsConnectedValidator _isConnectedValidator;
         private readonly ISelfIpAddressGetter _selfIpAddressGetter;
-        private readonly IDeviceSearcher _deviceSearcher;
         public Builder()
         {
             _logger = new NLogConfig().GetNLogLogger();
             _resultWriter = new ResultWriter();
             _isConnectedValidator = new IsConnectedValidator();
             _selfIpAddressGetter = new SelfIpAddressGetter();
-            _deviceSearcher = new DeviceSearcher(_logger);
         }
         public Runner Build()
         {
-            return new Runner(_logger, _resultWriter, _isConnectedValidator, _selfIpAddressGetter, _deviceSearcher);
+            return new Runner(_logger, _resultWriter, _isConnectedValidator, _selfIpAddressGetter);
         }
     }
 }

@@ -16,7 +16,6 @@ namespace LocalDevicesSearcher
         private readonly IResultWriter _resultWriter;
         private readonly IIsConnectedValidator _isConnectedValidator;
         private readonly ISelfIpAddressGetter _selfLocalIpAddressGetter;
-        private readonly IDeviceSearcher _deviceSearcher;
 
         const int minSubnetRange = 1;
         const int maxSubnetRange = 256;
@@ -24,14 +23,12 @@ namespace LocalDevicesSearcher
         public Runner(ILogger logger,
             IResultWriter resultWriter,
             IIsConnectedValidator isConnectedValidator,
-            ISelfIpAddressGetter selfIpAddressGetter,
-            IDeviceSearcher deviceSearcher)
+            ISelfIpAddressGetter selfIpAddressGetter)
         {
             _logger = logger;
             _resultWriter = resultWriter;
             _isConnectedValidator = isConnectedValidator;
             _selfLocalIpAddressGetter = selfIpAddressGetter;
-            _deviceSearcher = deviceSearcher;
         }
         public void Run()
         {
@@ -50,8 +47,8 @@ namespace LocalDevicesSearcher
                 msg = $"Processing subnet {subnet}{minSubnetRange} - {subnet}{maxSubnetRange} :\n";
                 _logger.LogInformation(msg);
 
-                List<Device> devices = _deviceSearcher.DevicesSearch(minSubnetRange, maxSubnetRange, subnet);
-                _resultWriter.WriteResult(devices);
+                IDeviceSearcher deviceSearcher = new DeviceSearcher(_logger, _resultWriter);
+                deviceSearcher.DevicesSearch(minSubnetRange, maxSubnetRange, subnet);
             }
             else
             {
