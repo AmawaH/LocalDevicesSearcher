@@ -14,10 +14,12 @@ namespace LocalDevicesSearcher.Infrastructure.Logger
             InternalLogger.LogToConsole = true;
             InternalLogger.LogToConsoleError = true;
             var config = new LoggingConfiguration();
+            string datetime = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            string fileName = $"{datetime}.log";
             //Targets:
             var fileTarget = new FileTarget("fileTarget")
             {
-                FileName = DateTime.Now.ToString("yyyyMMdd_HHmmss"),
+                FileName = fileName,
                 Layout = "${longdate}|${level:uppercase=true}|${message} ${exception:format=ToString}"
             };
             var consoleTarget = new ConsoleTarget("consoleTarget")
@@ -31,7 +33,7 @@ namespace LocalDevicesSearcher.Infrastructure.Logger
             config.AddRule(NLog.LogLevel.Info, NLog.LogLevel.Fatal, fileTarget);
             NLog.LogManager.Configuration = config;
         }
-        public ILogger GetNLogLogger()
+        public static ILogger GetNLogLogger()
         {
             var loggerFactory = LoggerFactory.Create(builder =>
             {
