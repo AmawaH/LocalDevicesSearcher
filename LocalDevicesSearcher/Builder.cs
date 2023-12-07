@@ -1,7 +1,6 @@
 ﻿using LocalDevicesSearcher.Infrastructure.ResultWriter;
 using LocalDevicesSearcher.Infrastructure.Logger;
 using LocalDevicesSearcher.Infrastructure;
-using LocalDevicesSearcher.Processing;
 using LocalDevicesSearcher.Validations;
 using Microsoft.Extensions.Logging;
 

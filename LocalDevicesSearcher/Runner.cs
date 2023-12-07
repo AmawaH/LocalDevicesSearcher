@@ -3,10 +3,14 @@ using LocalDevicesSearcher.Infrastructure;
 using LocalDevicesSearcher.Processing;
 using LocalDevicesSearcher.Validations;
 using System;
-using System.Collections.Generic;
 using LocalDevicesSearcher.Models;
 using System.Net;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
+using LocalDevicesSearcher.Models.EFDB;
+using Microsoft.Extensions.Configuration;
+using System.IO;
 
 namespace LocalDevicesSearcher
 {
@@ -16,7 +20,6 @@ namespace LocalDevicesSearcher
         private readonly IResultWriter _resultWriter;
         private readonly IIsConnectedValidator _isConnectedValidator;
         private readonly ISelfIpAddressGetter _selfLocalIpAddressGetter;
-
         const int minSubnetRange = 1;
         const int maxSubnetRange = 256;
         static readonly string fileName = DateTime.Now.ToString("yyyyMMdd_HHmmss"); // "TestDir/testfilename";
@@ -32,6 +35,16 @@ namespace LocalDevicesSearcher
         }
         public void Run()
         {
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appSettings.json")
+                .Build();
+            var services = new ServiceCollection();
+            string connectionString = configuration.GetConnectionString("DefaultConnection");
+            //services for EF:
+            services.AddDbContext<DeviceDbContext>(options => options.UseSqlServer(connectionString))
+                    .AddTransient<IDeviceRepository, EFDeviceRepository>();
+            var serviceProvider = services.BuildServiceProvider();
             _resultWriter.CreateResultFile(fileName);
             IPAddress selfLocalIp4 = _selfLocalIpAddressGetter.GetSelfIp4Address();
             string selfLocalIp4String = selfLocalIp4.ToString();
@@ -47,12 +60,12 @@ namespace LocalDevicesSearcher
                 msg = $"Processing subnet {subnet}{minSubnetRange} - {subnet}{maxSubnetRange} :\n";
                 _logger.LogInformation(msg);
 
-                IDeviceSearcher deviceSearcher = new DeviceSearcher(_logger, _resultWriter);
+                IDeviceSearcher deviceSearcher = new DeviceSearcher(_logger, _resultWriter, serviceProvider);
                 deviceSearcher.DevicesSearch(minSubnetRange, maxSubnetRange, subnet);
             }
             else
             {
-                _logger.LogInformation("Your device is not connected to any network");
+                _logger.LogWarning("Your device is not connected to any network");
             }
             NLog.LogManager.Shutdown();
         }

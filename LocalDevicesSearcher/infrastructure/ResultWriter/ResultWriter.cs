@@ -1,6 +1,5 @@
 ﻿using LocalDevicesSearcher.Models;
 using LocalDevicesSearcher.Validations;
-using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 
 namespace LocalDevicesSearcher.Infrastructure.ResultWriter

@@ -30,7 +30,7 @@ namespace LocalDevicesSearcherTest
             var portsDetectServiceMock = new Mock<IPortDetectService>();
             List<int> testPortList = new List<int> { 1, 2, 3, 4 };
             portsDetectServiceMock.Setup(pds => pds.PortsDetect(It.IsAny<IPAddress>())).Returns(testPortList);
-            IDeviceRepository deviceRepository = new DeviceRepository();
+            IDeviceRepository deviceRepository = new DeviceCalculator();
             var deviceSearcher = new DeviceSearcher(loggerMock.Object, resultWriterMock.Object ,pingingServiceMock.Object, portsDetectServiceMock.Object, deviceRepository);
 
             // Act
@@ -53,7 +53,7 @@ namespace LocalDevicesSearcherTest
             var pingingServiceMock = new Mock<IPingingService>();
             IPAddress testIp = null;
             pingingServiceMock.Setup(ps => ps.Pinging(It.IsAny<string>())).Returns(testIp);
-            IDeviceRepository deviceRepository = new DeviceRepository();
+            IDeviceRepository deviceRepository = new DeviceCalculator();
             var deviceSearcher = new DeviceSearcher(loggerMock.Object, null ,pingingServiceMock.Object, null, deviceRepository);
 
             // Act

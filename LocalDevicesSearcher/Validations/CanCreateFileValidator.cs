@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.IO;
 
 namespace LocalDevicesSearcher.Validations
@@ -10,11 +9,9 @@ namespace LocalDevicesSearcher.Validations
     }
     public class CanCreateFileValidator : ICanCreateFileValidator
     {
-
         public CanCreateFileValidator()
         {
         }
-
         public bool TryCreateFile(string fileName)
         {
             string directoryPath = Path.GetDirectoryName(fileName);

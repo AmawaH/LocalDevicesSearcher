@@ -1,26 +1,29 @@
 ﻿using LocalDevicesSearcher.Infrastructure;
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Net;
 
 namespace LocalDevicesSearcher.Models
 {
     public class Device
     {
+        public int Id { get; set; }
+        [Column(TypeName = "nvarchar(15)")]
         [JsonConverter(typeof(IPAddressToJsonConverter))]
-        public IPAddress Ip4 { get; init; }
+        public IPAddress Ip4 { get; set; }
+        [Column(TypeName = "nvarchar(45)")]
         [JsonConverter(typeof(IPAddressToJsonConverter))]
-        public IPAddress Ip6 { get; init; }
-        public string HostName { get; init; }
-        public string MacAddress { get; init; }
-        public List<int> OpenedPorts { get; init; }
-        public Device(IPAddress ip4, IPAddress ip6, string hostName, string macAddress, List<int> detectedPorts)
-        {
-            Ip4 = ip4;
-            Ip6 = ip6;
-            HostName = hostName;
-            MacAddress = macAddress;
-            OpenedPorts = detectedPorts;
-        }
+        public IPAddress Ip6 { get; set; }
+        public string HostName { get; set; }
+        public string MacAddress { get; set; }
+        public List<OpenedPort> OpenedPorts { get; set; }
+    }
+    public class OpenedPort
+    {
+        public int Id { get; set; }
+        public int PortNumber { get; set; }
+        public int DeviceId { get; set; }
+        public Device Device { get; set; }
     }
 }

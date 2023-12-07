@@ -7,35 +7,21 @@ using System.Collections.Generic;
 
 namespace LocalDevicesSearcher.Models
 {
-    public interface IDeviceRepository
+    public interface IDeviceCalculator
     {
-        Device AddDevice(IPAddress address, List<int> openedPorts);
-        List<Device> GetDevices();
+        Device CalculateDevice(IPAddress address, List<int> openedPorts);
     }
-    public class DeviceRepository : IDeviceRepository
+    public class DeviceCalculator : IDeviceCalculator
     {
-        private List<Device> devices;
-        public DeviceRepository()
+        public Device CalculateDevice(IPAddress address, List<int> openedPorts)
         {
-            devices = new List<Device>();
-        }
-        public DeviceRepository(List<Device> _devices)
-        {
-            devices = _devices;
-        }
-        public Device AddDevice(IPAddress address, List<int> openedPorts)
-        {
-            IPAddress ip4 = address;
-            IPAddress ip6 = GetIp6(address);
-            string hostName = GetHostName(address);
-            string macAddress = GetMacAddress(address);
-            Device device = new Device(ip4, ip6, hostName, macAddress, openedPorts);
-            devices.Add(device);
+            Device device = new Device();
+            device.Ip4 = address;
+            device.Ip6 = GetIp6(address);
+            device.HostName = GetHostName(address);
+            device.MacAddress = GetMacAddress(address);
+            device.OpenedPorts = openedPorts.Select(portNumber => new OpenedPort { PortNumber = portNumber }).ToList();
             return device;
-        }
-        public List<Device> GetDevices()
-        {
-            return devices;
         }
         private static IPAddress GetIp6(IPAddress address)
         {

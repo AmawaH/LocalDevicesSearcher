@@ -16,15 +16,13 @@ namespace LocalDevicesSearcher.Processing
     {
         private ILogger _logger;
         private IPortsForDetection _portsForDetection;
-
         public PortsDetectService(ILogger logger)
         {
             _logger = logger;
             _portsForDetection = new PortsForDetection();
         }
-        public PortsDetectService(ILogger logger, IPortsForDetection portsForDetection)
+        public PortsDetectService(ILogger logger, IPortsForDetection portsForDetection) : this(logger)
         {
-            _logger = logger;
             _portsForDetection = portsForDetection;
         }
         public List<int> PortsDetect(IPAddress ipAddress)
