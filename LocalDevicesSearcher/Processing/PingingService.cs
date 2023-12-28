@@ -17,7 +17,7 @@ namespace LocalDevicesSearcher.Processing
         public PingingService(ILogger logger)
         {
             _logger = logger;
-        } 
+        }
         public IPAddress Pinging(string pingedAddress)
         {
             byte[] buffer = Encoding.ASCII.GetBytes("PingingMessage");

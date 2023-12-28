@@ -15,12 +15,12 @@ namespace LocalDevicesSearcher.Infrastructure.ResultWriter
     {
         private bool _canWriteResultInFile;
         private string _resultFileName;
-        private IResultWriterService _resultWriterService;
+        private IResultWriterToFileService _resultWriterService;
         public ResultWriter()
         {
-            _resultWriterService = new ResultWriterService();
+            _resultWriterService = new ResultWriterToFileService();
         }
-        public ResultWriter(IResultWriterService resultWriterService) 
+        public ResultWriter(IResultWriterToFileService resultWriterService)
         {
             _resultWriterService = resultWriterService;
         }
@@ -30,19 +30,19 @@ namespace LocalDevicesSearcher.Infrastructure.ResultWriter
         }
         public void WriteResult(List<Device> devices)
         {
-            if ((_canWriteResultInFile)&&(devices != null))
+            if ((_canWriteResultInFile) && (devices != null))
             {
                 foreach (Device device in devices)
                 {
-                    _resultWriterService.WriteToResultFile(_resultFileName, device);
+                    _resultWriterService.ResultWriteToFile(_resultFileName, device);
                 }
             }
         }
         public void WriteResult(Device device)
         {
-            if ((_canWriteResultInFile)&&(device != null))
-            { 
-                _resultWriterService.WriteToResultFile(_resultFileName, device);
+            if ((_canWriteResultInFile) && (device != null))
+            {
+                _resultWriterService.ResultWriteToFile(_resultFileName, device);
             }
         }
         public void CreateResultFile(string path)

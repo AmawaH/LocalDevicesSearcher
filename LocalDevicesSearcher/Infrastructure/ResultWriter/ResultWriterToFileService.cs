@@ -4,13 +4,13 @@ using System.IO;
 
 namespace LocalDevicesSearcher.Infrastructure.ResultWriter
 {
-    public interface IResultWriterService
+    public interface IResultWriterToFileService
     {
-        void WriteToResultFile(string resultFileName, Device device);
+        void ResultWriteToFile(string resultFileName, Device device);
     }
-    public class ResultWriterService : IResultWriterService
+    public class ResultWriterToFileService : IResultWriterToFileService
     {
-        public void WriteToResultFile(string resultFileName, Device device)
+        public void ResultWriteToFile(string resultFileName, Device device)
         {
             lock (this)
             {

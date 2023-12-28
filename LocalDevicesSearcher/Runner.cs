@@ -6,11 +6,9 @@ using System;
 using LocalDevicesSearcher.Models;
 using System.Net;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.EntityFrameworkCore;
-using LocalDevicesSearcher.Models.EFDB;
 using Microsoft.Extensions.Configuration;
-using System.IO;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace LocalDevicesSearcher
 {
@@ -20,31 +18,24 @@ namespace LocalDevicesSearcher
         private readonly IResultWriter _resultWriter;
         private readonly IIsConnectedValidator _isConnectedValidator;
         private readonly ISelfIpAddressGetter _selfLocalIpAddressGetter;
-        const int minSubnetRange = 1;
-        const int maxSubnetRange = 256;
+        private readonly IConfiguration _configuration;
+        private readonly IServiceProviderFactory _serviceProviderFactory;
         static readonly string fileName = DateTime.Now.ToString("yyyyMMdd_HHmmss"); // "TestDir/testfilename";
         public Runner(ILogger logger,
             IResultWriter resultWriter,
             IIsConnectedValidator isConnectedValidator,
-            ISelfIpAddressGetter selfIpAddressGetter)
+            ISelfIpAddressGetter selfIpAddressGetter,
+            IConfiguration configuration)
         {
             _logger = logger;
             _resultWriter = resultWriter;
             _isConnectedValidator = isConnectedValidator;
             _selfLocalIpAddressGetter = selfIpAddressGetter;
+            _configuration = configuration;
         }
         public void Run()
         {
-            var configuration = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appSettings.json")
-                .Build();
-            var services = new ServiceCollection();
-            string connectionString = configuration.GetConnectionString("DefaultConnection");
-            //services for EF:
-            services.AddDbContext<DeviceDbContext>(options => options.UseSqlServer(connectionString))
-                    .AddTransient<IDeviceRepository, EFDeviceRepository>();
-            var serviceProvider = services.BuildServiceProvider();
+            IServiceProvider serviceProvider = new ServiceProviderFactory(_configuration).ServiceProvider;
             _resultWriter.CreateResultFile(fileName);
             IPAddress selfLocalIp4 = _selfLocalIpAddressGetter.GetSelfIp4Address();
             string selfLocalIp4String = selfLocalIp4.ToString();
@@ -55,13 +46,20 @@ namespace LocalDevicesSearcher
             bool isConnectedToNetwork = _isConnectedValidator.IsConnectedValidation(selfLocalIp4String);
             if (isConnectedToNetwork)
             {
+                IDeviceSearcher deviceSearcher = new DeviceSearcher(_logger, _resultWriter, serviceProvider);
                 string subnet = selfLocalIp4String.Substring(0, selfLocalIp4String.LastIndexOf('.') + 1);
 
-                msg = $"Processing subnet {subnet}{minSubnetRange} - {subnet}{maxSubnetRange} :\n";
-                _logger.LogInformation(msg);
-
-                IDeviceSearcher deviceSearcher = new DeviceSearcher(_logger, _resultWriter, serviceProvider);
-                deviceSearcher.DevicesSearch(minSubnetRange, maxSubnetRange, subnet);
+                if (_configuration.GetValue<bool>("Constants:Range"))
+                {
+                    int minSubnetRange = _configuration.GetValue<int>("Constants:MinSubnetRange");
+                    int maxSubnetRange = _configuration.GetValue<int>("Constants:MaxSubnetRange");
+                    deviceSearcher.DevicesSearch(subnet, minSubnetRange, maxSubnetRange);
+                }
+                else
+                {
+                    List<int> subnetCollection = _configuration.GetSection("Constants:SubnetCollection").Get<List<int>>();
+                    deviceSearcher.DevicesSearch(subnet, subnetCollection);
+                }
             }
             else
             {

@@ -12,7 +12,8 @@ namespace LocalDevicesSearcher.Processing
 {
     public interface IDeviceSearcher
     {
-        void DevicesSearch(int minSubnetRange, int maxSubnetRange, string subnet);
+        void DevicesSearch(string subnet, int minSubnetRange, int maxSubnetRange);
+        void DevicesSearch(string subnet, IEnumerable<int> subnetCollection);
     }
     public class DeviceSearcher : IDeviceSearcher
     {
@@ -37,7 +38,7 @@ namespace LocalDevicesSearcher.Processing
             _portsDetectService = new PortsDetectService(logger);
             _deviceRepository = deviceRepository;
         }
-        public DeviceSearcher(ILogger logger, IResultWriter resultWriter, IPingingService pingingService, IDeviceRepository deviceRepository) :this(logger, resultWriter, deviceRepository)
+        public DeviceSearcher(ILogger logger, IResultWriter resultWriter, IPingingService pingingService, IDeviceRepository deviceRepository) : this(logger, resultWriter, deviceRepository)
         {
             _pingingService = pingingService;
         }
@@ -45,26 +46,42 @@ namespace LocalDevicesSearcher.Processing
         {
             _portsDetectService = portsDetectService;
         }
-        public void DevicesSearch(int minSubnetRange, int maxSubnetRange, string subnet)
+        public void DevicesSearch(string subnet, int minSubnetRange, int maxSubnetRange)
+        {
+            string msg = $"Processing subnet {subnet}{minSubnetRange} - {subnet}{maxSubnetRange} :\n";
+            _logger.LogInformation(msg);
+
+            IEnumerable<int> subnetCollection = Enumerable.Range(minSubnetRange, maxSubnetRange - minSubnetRange);
+            Searching(subnetCollection, subnet);
+        }
+        public void DevicesSearch(string subnet, IEnumerable<int> subnetCollection)
+        {
+
+            List<string> ls = subnetCollection.Select(item => subnet + item.ToString()).ToList();
+            string s = string.Join(" ,", ls);
+            string msg = $"Processing subnets: {s}";
+            _logger.LogInformation(msg);
+
+            Searching(subnetCollection, subnet);
+        }
+        private void Searching(IEnumerable<int> subnetCollection, string subnet)
         {
             Parallel.ForEach(
-                    Enumerable.Range(minSubnetRange, maxSubnetRange - minSubnetRange),
-                        new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount }, // Кількість паралельних потоків
-                        i =>
-                        {
-                            string addressInProcess = subnet + i;
-                            IPAddress detectedIp = _pingingService.Pinging(addressInProcess);
-                            if (detectedIp is not null)
-                            {
-                                List<int> openedPorts = _portsDetectService.PortsDetect(detectedIp);
-                                Device device = new DeviceCalculator().CalculateDevice(detectedIp, openedPorts);
-                                _resultWriter.WriteResult(device);
-                                if (_deviceRepository != null)
-                                {
-                                    _deviceRepository.AddDevice(device);
-                                }
-                            }
-                        });
+                subnetCollection,
+                new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount },
+                i =>
+                {
+                    string addressInProcess = subnet + i;
+                    IPAddress detectedIp = _pingingService.Pinging(addressInProcess);
+                    if (detectedIp is not null)
+                    {
+                        List<int> openedPorts = _portsDetectService.PortsDetect(detectedIp);
+                        Device device = new DeviceCalculator().CalculateDevice(detectedIp, openedPorts);
+                        _resultWriter.WriteResult(device);
+                        _deviceRepository.AddDevice(device);
+                    }
+                });
+
         }
     }
 }

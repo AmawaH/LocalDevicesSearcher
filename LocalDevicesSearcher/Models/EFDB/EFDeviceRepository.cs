@@ -21,10 +21,12 @@ namespace LocalDevicesSearcher.Models.EFDB
         public async Task AddDevice(Device device)
         {
             _context.Devices.Add(device);
+            _context.SaveChanges();
             foreach (var openedPort in device.OpenedPorts)
             {
                 if (_context.Entry(openedPort).State == EntityState.Detached)
                 {
+                    openedPort.DeviceId = device.Id;
                     _context.OpenedPorts.Add(openedPort);
                 }
             }

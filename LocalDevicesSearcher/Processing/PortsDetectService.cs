@@ -33,7 +33,7 @@ namespace LocalDevicesSearcher.Processing
             int numThreads = 10;
             int portsPerThread = maxPortIndex / numThreads;
             List<Thread> threads = new();
-            
+
             string msg = $"Detecting opened ports for {ipAddress}";
             _logger.LogInformation(msg);
 
@@ -42,7 +42,8 @@ namespace LocalDevicesSearcher.Processing
                 int startPortIndex = i * portsPerThread + 1;
                 int endPortIndex = (i == numThreads - 1) ? maxPortIndex : (i + 1) * portsPerThread;
                 Thread thread = new Thread(
-                    () => {
+                    () =>
+                    {
                         int port = CheckPorts(startPortIndex, endPortIndex, ipAddress, portsForDetectionList);
                         if (port != 0)
                         {

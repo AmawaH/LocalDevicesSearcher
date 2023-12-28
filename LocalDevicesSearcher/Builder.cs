@@ -3,6 +3,8 @@ using LocalDevicesSearcher.Infrastructure.Logger;
 using LocalDevicesSearcher.Infrastructure;
 using LocalDevicesSearcher.Validations;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
+using System.IO;
 
 namespace LocalDevicesSearcher
 {
@@ -12,16 +14,21 @@ namespace LocalDevicesSearcher
         private readonly IResultWriter _resultWriter;
         private readonly IIsConnectedValidator _isConnectedValidator;
         private readonly ISelfIpAddressGetter _selfIpAddressGetter;
+        private readonly IConfiguration _configuration;
         public Builder()
         {
             _logger = new NLogConfig().GetNLogLogger();
             _resultWriter = new ResultWriter();
             _isConnectedValidator = new IsConnectedValidator();
             _selfIpAddressGetter = new SelfIpAddressGetter();
+            _configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appSettings.json")
+                .Build();
         }
         public Runner Build()
         {
-            return new Runner(_logger, _resultWriter, _isConnectedValidator, _selfIpAddressGetter);
+            return new Runner(_logger, _resultWriter, _isConnectedValidator, _selfIpAddressGetter, _configuration);
         }
     }
 }
