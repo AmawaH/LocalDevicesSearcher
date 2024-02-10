@@ -4,12 +4,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.ComponentModel.Design;
 
 namespace LocalDevicesSearcher.Infrastructure
 {
     public interface IServiceProviderFactory
     {
+        public IServiceProvider ServiceProvider { get; }
     }
     public class ServiceProviderFactory : IServiceProviderFactory
     {

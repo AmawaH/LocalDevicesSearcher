@@ -5,15 +5,14 @@ using System.Net;
 using System.Threading.Tasks;
 using LocalDevicesSearcher.Infrastructure.ResultWriter;
 using LocalDevicesSearcher.Models;
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace LocalDevicesSearcher.Processing
 {
     public interface IDeviceSearcher
     {
-        void DevicesSearch(string subnet, int minSubnetRange, int maxSubnetRange);
-        void DevicesSearch(string subnet, IEnumerable<int> subnetCollection);
+        void DevicesSearch(string subnet);
     }
     public class DeviceSearcher : IDeviceSearcher
     {
@@ -21,54 +20,47 @@ namespace LocalDevicesSearcher.Processing
         private IResultWriter _resultWriter;
         private IPingingService _pingingService;
         private IPortDetectService _portsDetectService;
-        private IDeviceRepository _deviceRepository;
-        public DeviceSearcher(ILogger logger, IResultWriter resultWriter, IServiceProvider serviceProvider)
+        private IConfiguration _configuration;
+        public DeviceSearcher(ILogger logger, IResultWriter resultWriter, IConfiguration configuration)
         {
             _logger = logger;
             _resultWriter = resultWriter;
             _pingingService = new PingingService(logger);
             _portsDetectService = new PortsDetectService(logger);
-            _deviceRepository = serviceProvider.GetRequiredService<IDeviceRepository>();
+            _configuration = configuration;
         }
-        public DeviceSearcher(ILogger logger, IResultWriter resultWriter, IDeviceRepository deviceRepository)
-        {
-            _logger = logger;
-            _resultWriter = resultWriter;
-            _pingingService = new PingingService(logger);
-            _portsDetectService = new PortsDetectService(logger);
-            _deviceRepository = deviceRepository;
-        }
-        public DeviceSearcher(ILogger logger, IResultWriter resultWriter, IPingingService pingingService, IDeviceRepository deviceRepository) : this(logger, resultWriter, deviceRepository)
+        public DeviceSearcher(ILogger logger, IResultWriter resultWriter, IConfiguration configuration, IPingingService pingingService) : this(logger, resultWriter, configuration)
         {
             _pingingService = pingingService;
         }
-        public DeviceSearcher(ILogger logger, IResultWriter resultWriter, IPingingService pingingService, IPortDetectService portsDetectService, IDeviceRepository deviceRepository) : this(logger, resultWriter, pingingService, deviceRepository)
+        public DeviceSearcher(ILogger logger, IResultWriter resultWriter, IPingingService pingingService, IConfiguration configuration, IPortDetectService portsDetectService) : this(logger, resultWriter, configuration, pingingService)
         {
             _portsDetectService = portsDetectService;
         }
-        public void DevicesSearch(string subnet, int minSubnetRange, int maxSubnetRange)
+        public void DevicesSearch(string subnet)
         {
-            string msg = $"Processing subnet {subnet}{minSubnetRange} - {subnet}{maxSubnetRange} :\n";
-            _logger.LogInformation(msg);
+            IEnumerable<int> subnetCollection;
+            if (_configuration.GetValue<bool>("Constants:Range"))
+            {
+                int minSubnetRange = _configuration.GetValue<int>("Constants:MinSubnetRange");
+                int maxSubnetRange = _configuration.GetValue<int>("Constants:MaxSubnetRange");
 
-            IEnumerable<int> subnetCollection = Enumerable.Range(minSubnetRange, maxSubnetRange - minSubnetRange);
-            Searching(subnetCollection, subnet);
-        }
-        public void DevicesSearch(string subnet, IEnumerable<int> subnetCollection)
-        {
+                string msg = $"Processing IPs: {subnet}{minSubnetRange} - {subnet}{maxSubnetRange} :\n";
+                _logger.LogInformation(msg);
 
-            List<string> ls = subnetCollection.Select(item => subnet + item.ToString()).ToList();
-            string s = string.Join(" ,", ls);
-            string msg = $"Processing subnets: {s}";
-            _logger.LogInformation(msg);
+                subnetCollection = Enumerable.Range(minSubnetRange, maxSubnetRange - minSubnetRange);
+            }
+            else
+            {
+                subnetCollection = _configuration.GetSection("Constants:SubnetCollection").Get<IEnumerable<int>>();
 
-            Searching(subnetCollection, subnet);
-        }
-        private void Searching(IEnumerable<int> subnetCollection, string subnet)
-        {
-            Parallel.ForEach(
-                subnetCollection,
-                new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount },
+                List<string> ls = subnetCollection.Select(item => subnet + item.ToString()).ToList();
+                string s = string.Join(" ,", ls);
+                string msg = $"Processing IPs: {s}";
+                _logger.LogInformation(msg);
+
+            }
+            Parallel.ForEach(subnetCollection, new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount },
                 i =>
                 {
                     string addressInProcess = subnet + i;
@@ -78,10 +70,8 @@ namespace LocalDevicesSearcher.Processing
                         List<int> openedPorts = _portsDetectService.PortsDetect(detectedIp);
                         Device device = new DeviceCalculator().CalculateDevice(detectedIp, openedPorts);
                         _resultWriter.WriteResult(device);
-                        _deviceRepository.AddDevice(device);
                     }
                 });
-
         }
     }
 }

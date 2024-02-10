@@ -88,19 +88,15 @@ namespace LocalDevicesSearcher.Processing
         }
         private static bool IsPortOpen(IPAddress ipAddress, int port)
         {
-            try
-            {
-                using (TcpClient client = new TcpClient())
-                {
-                    client.Connect(ipAddress, port);
-                    return true;
-                }
-            }
-            catch (Exception)
+            TcpClient client = new TcpClient();
+            var result = client.BeginConnect(ipAddress, port, null, null);
+            var success = result.AsyncWaitHandle.WaitOne(TimeSpan.FromSeconds(1));
+            if (!success)
             {
                 return false;
             }
+            client.EndConnect(result);
+            return true;
         }
-
     }
 }

@@ -1,12 +1,12 @@
 ﻿using LocalDevicesSearcher.Models;
 using LocalDevicesSearcher.Validations;
+using Microsoft.Extensions.Configuration;
 using System.Collections.Generic;
 
 namespace LocalDevicesSearcher.Infrastructure.ResultWriter
 {
     public interface IResultWriter
     {
-        void SetResultFileName(string fileName);
         void WriteResult(List<Device> devices);
         void WriteResult(Device device);
         void CreateResultFile(string path);
@@ -15,34 +15,48 @@ namespace LocalDevicesSearcher.Infrastructure.ResultWriter
     {
         private bool _canWriteResultInFile;
         private string _resultFileName;
-        private IResultWriterToFileService _resultWriterService;
-        public ResultWriter()
+        private IResultWriterToFileService _resultWriterToFileService;
+        private IDeviceRepository _repository;
+        public ResultWriter(IDeviceRepository repository)
         {
-            _resultWriterService = new ResultWriterToFileService();
+            _resultWriterToFileService = new ResultWriterToFileService();
+            _repository = repository;
         }
-        public ResultWriter(IResultWriterToFileService resultWriterService)
+        public ResultWriter(IDeviceRepository repository, IResultWriterToFileService resultWriterService)
         {
-            _resultWriterService = resultWriterService;
+            _repository = repository;
+            _resultWriterToFileService = resultWriterService;
         }
-        public void SetResultFileName(string fileName)
+        public ResultWriter(IDeviceRepository repository, bool canWriteResultInFile, string resultFileName, IResultWriterToFileService resultWriterToFileService)
         {
-            _resultFileName = fileName;
+            _repository = repository;
+            _canWriteResultInFile = canWriteResultInFile;
+            _resultFileName = resultFileName;
+            _resultWriterToFileService = resultWriterToFileService;
         }
         public void WriteResult(List<Device> devices)
         {
-            if ((_canWriteResultInFile) && (devices != null))
+            if (devices != null)
             {
                 foreach (Device device in devices)
                 {
-                    _resultWriterService.ResultWriteToFile(_resultFileName, device);
+                    if (_canWriteResultInFile)
+                    {
+                        _resultWriterToFileService.ResultWriteToFile(_resultFileName, device);
+                    }
+                    _repository.AddDevice(device);
                 }
             }
         }
         public void WriteResult(Device device)
         {
-            if ((_canWriteResultInFile) && (device != null))
+            if (device != null)
             {
-                _resultWriterService.ResultWriteToFile(_resultFileName, device);
+                if (_canWriteResultInFile)
+                {
+                    _resultWriterToFileService.ResultWriteToFile(_resultFileName, device);
+                }
+                _repository.AddDevice(device);
             }
         }
         public void CreateResultFile(string path)
