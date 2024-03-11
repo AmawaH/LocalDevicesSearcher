@@ -6,7 +6,6 @@ using System;
 using LocalDevicesSearcher.Models;
 using System.Net;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LocalDevicesSearcher
@@ -16,22 +15,22 @@ namespace LocalDevicesSearcher
         private readonly ILogger _logger;
         private readonly IIsConnectedValidator _isConnectedValidator;
         private readonly ISelfIpAddressGetter _selfLocalIpAddressGetter;
-        private readonly IConfiguration _configuration;
+        private readonly IConfig _config;
 
         static readonly string fileName = DateTime.Now.ToString("yyyyMMdd_HHmmss"); // "TestDir/testfilename";
         public Runner(ILogger logger,
             IIsConnectedValidator isConnectedValidator,
             ISelfIpAddressGetter selfIpAddressGetter,
-            IConfiguration configuration)
+            IConfig config)
         {
             _logger = logger;
             _isConnectedValidator = isConnectedValidator;
             _selfLocalIpAddressGetter = selfIpAddressGetter;
-            _configuration = configuration;
+            _config = config;
         }
         public void Run()
         {
-            IServiceProviderFactory serviceProviderFactory = new ServiceProviderFactory(_configuration);
+            IServiceProviderFactory serviceProviderFactory = new ServiceProviderFactory(_config);
             IDeviceRepository repository = serviceProviderFactory.ServiceProvider.GetService<IDeviceRepository>();
             IResultWriter resultWriter = new ResultWriter(repository);
             resultWriter.CreateResultFile(fileName);
@@ -44,7 +43,7 @@ namespace LocalDevicesSearcher
             bool isConnectedToNetwork = _isConnectedValidator.IsConnectedValidation(selfLocalIp4String);
             if (isConnectedToNetwork)
             {
-                IDeviceSearcher deviceSearcher = new DeviceSearcher(_logger, resultWriter, _configuration);
+                IDeviceSearcher deviceSearcher = new DeviceSearcher(_logger, resultWriter, _config);
                 string subnet = selfLocalIp4String.Substring(0, selfLocalIp4String.LastIndexOf('.') + 1);
                 deviceSearcher.DevicesSearch(subnet);
             }

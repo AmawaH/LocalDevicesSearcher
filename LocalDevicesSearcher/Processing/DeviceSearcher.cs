@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using LocalDevicesSearcher.Infrastructure;
 using LocalDevicesSearcher.Infrastructure.ResultWriter;
 using LocalDevicesSearcher.Models;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace LocalDevicesSearcher.Processing
@@ -20,39 +20,39 @@ namespace LocalDevicesSearcher.Processing
         private IResultWriter _resultWriter;
         private IPingingService _pingingService;
         private IPortDetectService _portsDetectService;
-        private IConfiguration _configuration;
-        public DeviceSearcher(ILogger logger, IResultWriter resultWriter, IConfiguration configuration)
+        private IConfig _config;
+        public DeviceSearcher(ILogger logger, IResultWriter resultWriter, IConfig config)
         {
             _logger = logger;
             _resultWriter = resultWriter;
             _pingingService = new PingingService(logger);
             _portsDetectService = new PortsDetectService(logger);
-            _configuration = configuration;
+            _config = config;
         }
-        public DeviceSearcher(ILogger logger, IResultWriter resultWriter, IConfiguration configuration, IPingingService pingingService) : this(logger, resultWriter, configuration)
+        public DeviceSearcher(ILogger logger, IResultWriter resultWriter, IConfig config, IPingingService pingingService) : this(logger, resultWriter, config)
         {
             _pingingService = pingingService;
         }
-        public DeviceSearcher(ILogger logger, IResultWriter resultWriter, IPingingService pingingService, IConfiguration configuration, IPortDetectService portsDetectService) : this(logger, resultWriter, configuration, pingingService)
+        public DeviceSearcher(ILogger logger, IResultWriter resultWriter, IPingingService pingingService, IConfig config, IPortDetectService portsDetectService) : this(logger, resultWriter, config, pingingService)
         {
             _portsDetectService = portsDetectService;
         }
         public void DevicesSearch(string subnet)
         {
             IEnumerable<int> subnetCollection;
-            if (_configuration.GetValue<bool>("Constants:Range"))
+            if (_config.Range)
             {
-                int minSubnetRange = _configuration.GetValue<int>("Constants:MinSubnetRange");
-                int maxSubnetRange = _configuration.GetValue<int>("Constants:MaxSubnetRange");
+                int minSubnetRange = _config.MinSubnetRange;
+                int maxSubnetRange = _config.MaxSubnetRange;
 
                 string msg = $"Processing IPs: {subnet}{minSubnetRange} - {subnet}{maxSubnetRange} :\n";
                 _logger.LogInformation(msg);
 
-                subnetCollection = Enumerable.Range(minSubnetRange, maxSubnetRange - minSubnetRange);
+                subnetCollection = Enumerable.Range(minSubnetRange, maxSubnetRange - minSubnetRange + 1);
             }
             else
             {
-                subnetCollection = _configuration.GetSection("Constants:SubnetCollection").Get<IEnumerable<int>>();
+                subnetCollection = _config.SubnetCollection;
 
                 List<string> ls = subnetCollection.Select(item => subnet + item.ToString()).ToList();
                 string s = string.Join(" ,", ls);

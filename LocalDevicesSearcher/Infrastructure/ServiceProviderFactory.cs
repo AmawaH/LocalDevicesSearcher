@@ -1,7 +1,6 @@
 ﻿using LocalDevicesSearcher.Models;
 using LocalDevicesSearcher.Models.EFDB;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 
@@ -14,10 +13,10 @@ namespace LocalDevicesSearcher.Infrastructure
     public class ServiceProviderFactory : IServiceProviderFactory
     {
         public IServiceProvider ServiceProvider { get; }
-        public ServiceProviderFactory(IConfiguration configuration)
+        public ServiceProviderFactory(IConfig config)
         {
             IServiceCollection services = new ServiceCollection();
-            string connectionString = configuration.GetConnectionString("DefaultConnection");
+            string connectionString = config.ConnectionString;
             services.AddDbContext<DeviceDbContext>(options => options.UseSqlServer(connectionString))
                         .AddTransient<IDeviceRepository, EFDeviceRepository>();
             ServiceProvider = services.BuildServiceProvider();
